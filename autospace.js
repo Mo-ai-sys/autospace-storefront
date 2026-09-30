@@ -327,11 +327,35 @@
     if (box && tiles.length && !document.querySelector("#products-content [data-grid-root] > *")) box.hidden = true;
   }
 
+  // ---------- footer ----------
+  // The theme prints an empty store description and a "follow us" heading with no accounts under it.
+  function tidyFooter() {
+    var f = document.querySelector("footer");
+    if (!f) return;
+    [].forEach.call(f.querySelectorAll("p"), function (p) {
+      if (!p.textContent.trim() && p.previousElementSibling && p.previousElementSibling.tagName === "IMG")
+        p.textContent = "قطع غيار لـ 30 شركة سيارات، أصلي أو تجاري. نتحقق من القطعة برقم الهيكل (VIN).";
+    });
+    [].forEach.call(f.querySelectorAll("h3"), function (h) {
+      var next = h.nextElementSibling;
+      if (h.textContent.trim() === "تابعنا" && !(next && next.querySelector("a"))) {
+        h.hidden = true;
+        if (next) next.hidden = true;
+      }
+    });
+    var tel = f.querySelector('a[href^="tel:"]');
+    if (tel && !f.querySelector(".as-foot-wa")) {
+      var wa = el("a", { href: "https://wa.me/" + WHATSAPP, class: "as-foot-wa", target: "_blank", rel: "noopener" }, "اطلب عبر واتساب");
+      tel.parentElement.parentElement.appendChild(wa);
+    }
+  }
+
   // ---------- boot ----------
   function boot() {
     loadCss();
     sharpLogo();
     tidyCategoryPage();
+    tidyFooter();
     vehicles().then(function (V) {
       chipV = V;
       renderChip();

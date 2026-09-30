@@ -91,3 +91,8 @@
   [data-grid-root][data-grid="one"] { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 12px; row-gap: 28px; }
   [data-grid-root][data-grid="one"] h3, [data-grid-root][data-grid="one"] h2 { font-size: 14px; line-height: 1.45; }
 }
+
+/* footer: keep the phone number in left-to-right order, WhatsApp link under it */
+footer a[href^="tel:"] { direction: ltr; unicode-bidi: isolate; display: inline-block; }
+.as-foot-wa { display: inline-block; margin-top: 8px; font-size: 14px; font-weight: 500; color: var(--as-black);
+  text-decoration: underline; text-underline-offset: 3px; }
