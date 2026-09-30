@@ -85,3 +85,9 @@
 /* Zid's auto excerpt under the price flattens the fitment table into one line;
    the full description with the table is in the details section below */
 .product-details-column > .prose { display: none; }
+
+/* phones: two products per row in the theme's default grid view (it only offers one column or list) */
+@media (max-width: 767px) {
+  [data-grid-root][data-grid="one"] { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 12px; row-gap: 28px; }
+  [data-grid-root][data-grid="one"] h3, [data-grid-root][data-grid="one"] h2 { font-size: 14px; line-height: 1.45; }
+}
