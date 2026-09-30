@@ -96,3 +96,6 @@
 footer a[href^="tel:"] { direction: ltr; unicode-bidi: isolate; display: inline-block; }
 .as-foot-wa { display: inline-block; margin-top: 8px; font-size: 14px; font-weight: 500; color: var(--as-black);
   text-decoration: underline; text-underline-offset: 3px; }
+
+/* phones: the car chip bar sits under the header; keep it out of the open menu drawer */
+body:has(#mobile-drawer-dialog[open]) .as-chip-bar { display: none; }
