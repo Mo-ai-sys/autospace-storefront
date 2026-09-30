@@ -350,8 +350,22 @@
     }
   }
 
+  // ---------- search results ----------
+  // The theme's live search prints "From 96.00" in English on the Arabic store.
+  function arabicSearchPrices() {
+    var box = document.getElementById("search-dialog");
+    if (!box || document.documentElement.lang.indexOf("ar") !== 0) return;
+    new MutationObserver(function () {
+      [].forEach.call(box.querySelectorAll("p"), function (p) {
+        var t = p.firstChild;
+        if (t && t.nodeType === 3 && /^\s*From\s/.test(t.nodeValue)) t.nodeValue = t.nodeValue.replace(/From\s/, "من ");
+      });
+    }).observe(box, { childList: true, subtree: true });
+  }
+
   // ---------- boot ----------
   function boot() {
+    arabicSearchPrices();
     loadCss();
     sharpLogo();
     tidyCategoryPage();
