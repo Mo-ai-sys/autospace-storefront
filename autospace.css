@@ -81,3 +81,7 @@
 .as-fit-table th, .as-fit-table td { padding: 10px 12px; text-align: start; border-bottom: 1px solid var(--as-line); }
 .as-fit-table th { background: var(--as-paper); font-weight: 700; }
 .as-fit-table tr.is-match td { background: rgba(0, 180, 155, .14); font-weight: 700; }
+
+/* Zid's auto excerpt under the price flattens the fitment table into one line;
+   the full description with the table is in the details section below */
+.product-details-column > .prose { display: none; }
