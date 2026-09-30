@@ -298,9 +298,24 @@
     anchor.parentNode.insertBefore(box, anchor.nextSibling);
   }
 
+  // ---------- logo ----------
+  // Zid serves the uploaded logo as a 200px PNG, soft on high-density screens. Swap in the vector lockup
+  // wherever that same image appears (header, menu drawer, footer).
+  function sharpLogo() {
+    var head = document.querySelector('header a[href="/"] img');
+    if (!head) return;
+    var png = head.getAttribute("src");
+    [].forEach.call(document.querySelectorAll("img"), function (img) {
+      if (img.getAttribute("src") !== png) return;
+      img.src = asset("logo/autospace-lockup.svg");
+      img.removeAttribute("srcset");
+    });
+  }
+
   // ---------- boot ----------
   function boot() {
     loadCss();
+    sharpLogo();
     vehicles().then(function (V) {
       chipV = V;
       renderChip();
