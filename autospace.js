@@ -12,7 +12,10 @@
   window.__autospace = true;
 
   var script = document.currentScript;
-  var BASE = script && script.src ? script.src.replace(/[^/]+$/, "") : "https://cdn.jsdelivr.net/gh/Mo-ai-sys/autospace-storefront@main/";
+  var SRC = script && script.src ? script.src : "https://cdn.jsdelivr.net/gh/Mo-ai-sys/autospace-storefront@main/autospace.js";
+  var VERSION = (SRC.split("?")[1] || "");            // the loader adds ?v=<date> so browsers refetch daily
+  var BASE = SRC.split("?")[0].replace(/[^/]+$/, "");
+  function asset(path) { return BASE + path + (VERSION ? "?" + VERSION : ""); }
   var WHATSAPP = "966598929096";
 
   // ---------- small helpers ----------
@@ -40,14 +43,14 @@
 
   function loadCss() {
     if (document.querySelector("link[data-autospace]")) return;
-    var l = el("link", { rel: "stylesheet", href: BASE + "autospace.css", "data-autospace": "1" });
+    var l = el("link", { rel: "stylesheet", href: asset("autospace.css"), "data-autospace": "1" });
     document.head.appendChild(l);
   }
 
   var vehiclesPromise;
   function vehicles() {
     if (!vehiclesPromise) {
-      vehiclesPromise = fetch(BASE + "data/vehicles.json").then(function (r) { return r.json(); })
+      vehiclesPromise = fetch(asset("data/vehicles.json")).then(function (r) { return r.json(); })
         .then(function (d) {
           d.makeById = {}; d.modelById = {};
           d.makes.forEach(function (mk) {
@@ -64,9 +67,9 @@
   function vinDecoder() {
     if (!vinPromise) {
       vinPromise = new Promise(function (resolve) {
-        var s = el("script", { src: BASE + "vin.js" });
+        var s = el("script", { src: asset("vin.js") });
         s.onload = function () {
-          window.MoVIN.loadShared(BASE + "data/vin_learned.json").then(function () { resolve(window.MoVIN); });
+          window.MoVIN.loadShared(asset("data/vin_learned.json")).then(function () { resolve(window.MoVIN); });
         };
         s.onerror = function () { resolve(null); };
         document.head.appendChild(s);
