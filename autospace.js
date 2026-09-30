@@ -220,11 +220,18 @@
     if (!chipV) return;
     var header = document.querySelector("header");
     if (!header) return;
-    var chip = header.querySelector(".as-chip");
+    var chip = document.querySelector(".as-chip");
     if (!chip) {
       chip = el("a", { class: "as-chip" });
-      var nav = header.querySelector("nav") || header;
-      nav.insertBefore(chip, nav.firstChild);
+      if (window.matchMedia("(max-width: 767px)").matches) {
+        // phones: the header has no room, so the chip sits in a slim bar under it
+        var bar = el("div", { class: "as-chip-bar" });
+        bar.appendChild(chip);
+        header.parentNode.insertBefore(bar, header.nextSibling);
+      } else {
+        var nav = header.querySelector("nav") || header;
+        nav.insertBefore(chip, nav.firstChild);
+      }
     }
     var car = getCar(), label = car && carLabel(car, chipV);
     chip.href = label ? "/categories/" + car.md : "/#as-car";
