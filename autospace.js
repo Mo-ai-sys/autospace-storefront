@@ -302,6 +302,8 @@
   // Zid serves the uploaded logo as a 200px PNG, soft on high-density screens. Swap in the vector lockup
   // wherever that same image appears (header, menu drawer, footer).
   function sharpLogo() {
+    var icon = el("link", { rel: "icon", type: "image/svg+xml", href: asset("logo/autospace-symbol.svg") });
+    document.head.appendChild(icon);
     var head = document.querySelector('header a[href="/"] img');
     if (!head) return;
     var png = head.getAttribute("src");
