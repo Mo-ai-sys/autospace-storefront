@@ -1,0 +1,81 @@
+/* AutoSpace storefront additions. Tokens from brand/kit/colors/tokens.css. */
+:root {
+  --as-orange: #F15A30;
+  --as-green: #00B49B;
+  --as-gray: #B6BFC1;
+  --as-black: #111314;
+  --as-paper: #F4F6F6;
+  --as-ink-2: #4A5053;
+  --as-line: #DDE1E2;
+  --as-radius-box: 16px;
+  --as-radius-btn: 10px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+/* ---------- car picker ---------- */
+.as-picker { padding: 32px 16px; background: #fff; scroll-margin-top: 80px; }
+@media (min-width: 768px) { .as-picker { padding: 48px 64px; } }
+.as-picker .as-wrap {
+  max-width: 1200px; margin: 0 auto; background: var(--as-paper); border: 1px solid var(--as-line);
+  border-radius: var(--as-radius-box); padding: 24px;
+}
+@media (min-width: 768px) { .as-picker .as-wrap { padding: 32px; } }
+.as-head h2 { margin: 0; font-size: 24px; font-weight: 700; color: var(--as-black); line-height: 1.3; }
+.as-head p { margin: 6px 0 0; color: var(--as-ink-2); font-size: 16px; }
+.as-fields { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 20px; align-items: end; }
+@media (min-width: 768px) { .as-fields { grid-template-columns: 1.2fr 1.2fr 0.8fr auto; } }
+.as-field { display: grid; gap: 6px; font-size: 14px; font-weight: 500; color: var(--as-black); }
+.as-field select, .as-vin input {
+  height: 48px; width: 100%; border: 1px solid var(--as-gray); border-radius: var(--as-radius-btn);
+  background: #fff; color: var(--as-black); font: inherit; font-size: 16px; padding: 0 12px;
+}
+.as-field select:disabled { background: var(--as-paper); color: var(--as-ink-2); }
+.as-field select:focus-visible, .as-vin input:focus-visible, .as-btn:focus-visible, .as-btn-ghost:focus-visible,
+.as-chip:focus-visible { outline: 2px solid var(--as-orange); outline-offset: 2px; }
+
+/* brand rule: black text on orange (5.5:1) */
+.as-btn {
+  height: 48px; padding: 0 24px; border: 0; border-radius: var(--as-radius-btn); background: var(--as-orange);
+  color: var(--as-black); font: inherit; font-size: 16px; font-weight: 700; cursor: pointer; white-space: nowrap;
+  transition: transform .15s ease, opacity .15s ease;
+}
+.as-btn:active { transform: translateY(1px); }
+.as-btn:disabled { opacity: .45; cursor: not-allowed; }
+.as-btn-ghost {
+  height: 48px; padding: 0 20px; border: 1px solid var(--as-black); border-radius: var(--as-radius-btn);
+  background: transparent; color: var(--as-black); font: inherit; font-size: 16px; font-weight: 500;
+  cursor: pointer; white-space: nowrap;
+}
+.as-vin { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--as-line); }
+.as-vin label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; color: var(--as-black); }
+.as-vin-row { display: flex; gap: 8px; max-width: 520px; }
+.as-vin input { letter-spacing: .06em; text-transform: uppercase; }
+.as-vin-out { margin: 10px 0 0; font-size: 15px; color: var(--as-ink-2); min-height: 1.4em; }
+.as-vin-out.is-bad { color: #B42318; }
+.as-vin-out a, .as-fit a { color: var(--as-black); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+
+/* ---------- header chip ---------- */
+.as-chip {
+  display: inline-flex; align-items: center; height: 36px; padding: 0 14px; margin-inline-end: 12px;
+  border: 1px solid var(--as-gray); border-radius: 999px; font-size: 14px; font-weight: 500;
+  color: var(--as-black); background: #fff; text-decoration: none; white-space: nowrap;
+  max-width: 44vw; overflow: hidden; text-overflow: ellipsis;
+}
+.as-chip.is-set { border-color: var(--as-black); }
+@media (max-width: 767px) { .as-chip { height: 32px; padding: 0 10px; font-size: 13px; } }
+
+/* ---------- product page ---------- */
+.as-fit {
+  margin: 12px 0 16px; padding: 12px 16px; border-radius: var(--as-radius-box); font-size: 15px; line-height: 1.6;
+  border: 1px solid var(--as-line); background: var(--as-paper); color: var(--as-black);
+}
+/* brand rule: green only for verified fit, black text on green (7.1:1) */
+.as-fit--yes { background: var(--as-green); border-color: var(--as-green); }
+.as-fit-note { display: block; font-size: 14px; }
+.as-fit-table { width: 100%; border-collapse: collapse; margin: 8px 0 16px; font-size: 15px; }
+.as-fit-table th, .as-fit-table td { padding: 10px 12px; text-align: start; border-bottom: 1px solid var(--as-line); }
+.as-fit-table th { background: var(--as-paper); font-weight: 700; }
+.as-fit-table tr.is-match td { background: rgba(0, 180, 155, .14); font-weight: 700; }
