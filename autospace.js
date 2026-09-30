@@ -314,10 +314,24 @@
     });
   }
 
+  // ---------- category pages ----------
+  // Parent categories (a make, a part group) hold their products in the subcategories, so the theme
+  // shows "no products" under the subcategory tiles. Hide that box when tiles are there to pick from.
+  function tidyCategoryPage() {
+    if (!/^\/categories\//.test(location.pathname)) return;
+    var box = document.querySelector("#products-content > .bg-secondary");
+    var here = location.pathname.split("/")[2];
+    var tiles = [].filter.call(document.querySelectorAll('a[href*="/categories/"]'), function (a) {
+      return a.querySelector("h4") && a.getAttribute("href").indexOf("/categories/" + here) === -1;
+    });
+    if (box && tiles.length && !document.querySelector("#products-content [data-grid-root] > *")) box.hidden = true;
+  }
+
   // ---------- boot ----------
   function boot() {
     loadCss();
     sharpLogo();
+    tidyCategoryPage();
     vehicles().then(function (V) {
       chipV = V;
       renderChip();
