@@ -350,6 +350,17 @@
     }
   }
 
+  // ---------- WhatsApp links ----------
+  // Theme links (menu, homepage block) open an empty chat; start it with the request and the saved car.
+  function prefillWhatsApp(V) {
+    var car = getCar();
+    var label = car ? carLabel(car, V) : "";
+    var text = "السلام عليكم، أبحث عن قطعة" + (label ? " لسيارتي " + label : " لسيارتي") + ". رقم الهيكل (VIN): ";
+    [].forEach.call(document.querySelectorAll('a[href*="wa.me/"]'), function (a) {
+      if (a.href.indexOf("text=") === -1) a.href = wa(text);
+    });
+  }
+
   // ---------- search results ----------
   // The theme's live search prints "From 96.00" in English on the Arabic store.
   function arabicSearchPrices() {
@@ -375,6 +386,7 @@
       renderChip();
       buildPicker(V);
       productCheck(V);
+      prefillWhatsApp(V);
     }).catch(function () { /* data unavailable: the store works without these extras */ });
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
