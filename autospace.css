@@ -184,3 +184,6 @@ footer img[src*="autospace-lockup"] { width: 168px !important; height: auto !imp
 .product-options__item.active { background: var(--as-black) !important; border-color: var(--as-black) !important; }
 .product-options__item.active, .product-options__item.active * { color: #fff !important; }
 .product-options__item { border-radius: var(--as-radius-btn) !important; font-weight: 500; }
+
+/* policy pages: section headings typed as plain lines in the page editor */
+.prose > p.as-policy-h { font-size: 18px; font-weight: 700; color: var(--as-black); margin-top: 28px; margin-bottom: 8px; }

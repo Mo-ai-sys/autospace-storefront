@@ -394,6 +394,16 @@
     }
   }
 
+  // ---------- policy pages ----------
+  // The page editor saves plain lines; a short line with no bullet and no full stop is a section heading.
+  function tidyPolicyPage() {
+    if (location.pathname.indexOf("/pages/") !== 0) return;
+    [].forEach.call(document.querySelectorAll(".prose > p"), function (p, i) {
+      var t = p.textContent.trim();
+      if (i > 0 && t && t.length < 40 && t.charAt(0) !== "•" && !/[.:،]$/.test(t)) p.classList.add("as-policy-h");
+    });
+  }
+
   // ---------- WhatsApp links ----------
   // Theme links (menu, homepage block) open an empty chat; start it with the request and the saved car.
   function prefillWhatsApp(V) {
@@ -425,6 +435,7 @@
     sharpLogo();
     tidyCategoryPage();
     tidyFooter();
+    tidyPolicyPage();
     vehicles().then(function (V) {
       chipV = V;
       renderChip();
