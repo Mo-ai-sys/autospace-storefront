@@ -325,7 +325,8 @@
   // data/fit/<model id>.json (mo-auto/tools/build_fit_index.py) maps product id -> year spans for
   // that model; each card gets "fits your car" (green) or the years it does fit (neutral).
   function yearsLabel(spans) {
-    return spans.map(function (s) { return s[0] === s[1] ? s[0] : s[0] + "-" + s[1]; }).join("، ");
+    // each range in its own LTR island, or RTL flow shows "2018-2019" as "2019-2018"
+    return spans.map(function (s) { return '<bdi dir="ltr">' + (s[0] === s[1] ? s[0] : s[0] + "-" + s[1]) + "</bdi>"; }).join("، ");
   }
   function cardBadges() {
     var car = getCar();
@@ -341,7 +342,7 @@
           var known = spans.filter(function (s) { return s[0]; });
           var fits = !car.yr || !known.length || known.some(function (s) { return car.yr >= s[0] && car.yr <= s[1]; });
           var tag = el("span", { class: "as-card-fit" + (fits ? " is-yes" : "") },
-            fits ? "يناسب سيارتك" : "يناسب " + esc(yearsLabel(known)));
+            fits ? "يناسب سيارتك" : "يناسب " + yearsLabel(known));     // numbers only, no user text
           var title = card.querySelector("h3, h2");
           title.parentNode.insertBefore(tag, title);
         });
