@@ -173,3 +173,4 @@ footer a[href^="tel:"] { direction: ltr; unicode-bidi: isolate; display: inline-
 footer .border-t, footer [class*="border"] { border-color: var(--as-line-dark) !important; }
 .as-foot-wa { display: inline-block; margin-top: 10px; font-size: 15px; font-weight: 600;
   text-decoration: underline; text-underline-offset: 3px; }
+footer img[src*="autospace-lockup"] { width: 168px !important; height: auto !important; max-height: none !important; }

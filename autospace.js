@@ -366,8 +366,11 @@
       }
     });
     var tel = f.querySelector('a[href^="tel:"]');
+    // contact lines read as plain text: no phone or envelope icons
+    [].forEach.call(f.querySelectorAll('a[href^="tel:"], a[href^="mailto:"], a[href*="email-protection"]'), function (a) {
+      [].forEach.call(a.parentElement.querySelectorAll("svg"), function (svg) { svg.remove(); });
+    });
     if (tel) {
-      [].forEach.call(tel.parentElement.querySelectorAll("svg"), function (svg) { svg.remove(); });
       tel.textContent = "+966 59 892 9096";
       tel.setAttribute("dir", "ltr");
     }
