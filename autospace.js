@@ -324,30 +324,42 @@
   // A model category lists the model's parts for every year, so a 2016 RAV4 also sees 2006 parts.
   // data/fit/<model id>.json (mo-auto/tools/build_fit_index.py) maps product id -> year spans for
   // that model; each card says "fits your car" (green) or "does not fit your car" (neutral).
+  var CARD = "[data-wishlist-btn][data-product-id]";
   function cardBadges() {
     var car = getCar();
-    if (!car || !car.md || !document.querySelector("[data-wishlist-btn][data-product-id]")) return;
-    fetch(asset("data/fit/" + car.md + ".json")).then(function (r) { return r.ok ? r.json() : {}; }).then(function (fit) {
-      function mark() {
-        [].forEach.call(document.querySelectorAll("[data-wishlist-btn][data-product-id]"), function (btn) {
-          var card = btn;
-          while (card.parentElement && !card.querySelector('a[href*="/products/"] h3, a[href*="/products/"] h2, h3, h2')) card = card.parentElement;
-          if (!card || card.querySelector(".as-card-fit")) return;
-          // not in the model's index = not listed for this model at all
-          var spans = fit[btn.getAttribute("data-product-id").slice(0, 12)] || [];
-          var known = spans.filter(function (s) { return s[0]; });   // [0, 0] = years unknown
-          var fits = spans.length > 0 && (!car.yr || !known.length ||
-            known.some(function (s) { return car.yr >= s[0] && car.yr <= s[1]; }));
-          var tag = el("span", { class: "as-card-fit" + (fits ? " is-yes" : "") },
-            fits ? "يناسب سيارتك" : "لا يناسب سيارتك");
-          var title = card.querySelector("h3, h2");
-          title.parentNode.insertBefore(tag, title);
-        });
-      }
-      mark();
-      var grid = document.querySelector("[data-grid-root]");
-      if (grid) new MutationObserver(mark).observe(grid, { childList: true, subtree: true });
-    }).catch(function () { /* no index for this model: cards stay as they are */ });
+    if (!car || !car.md) return;
+    // the theme renders product cards after load, and again on paging: watch the page, fetch the
+    // model's index when the first card shows up, then mark every new card
+    var fitPromise = null, queued = false;
+    function onChange() {
+      if (queued || !document.querySelector(CARD)) return;
+      queued = true;
+      requestAnimationFrame(function () { queued = false; run(); });
+    }
+    function run() {
+      fitPromise = fitPromise || fetch(asset("data/fit/" + car.md + ".json"))
+        .then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+      fitPromise.then(function (fit) { if (fit) mark(fit); });
+    }
+    new MutationObserver(onChange).observe(document.body, { childList: true, subtree: true });
+    onChange();
+
+    function mark(fit) {
+      [].forEach.call(document.querySelectorAll(CARD), function (btn) {
+        var card = btn;
+        while (card.parentElement && !card.querySelector('a[href*="/products/"] h3, a[href*="/products/"] h2, h3, h2')) card = card.parentElement;
+        if (!card || card.querySelector(".as-card-fit")) return;
+        // not in the model's index = not listed for this model at all
+        var spans = fit[btn.getAttribute("data-product-id").slice(0, 12)] || [];
+        var known = spans.filter(function (s) { return s[0]; });   // [0, 0] = years unknown
+        var fits = spans.length > 0 && (!car.yr || !known.length ||
+          known.some(function (s) { return car.yr >= s[0] && car.yr <= s[1]; }));
+        var tag = el("span", { class: "as-card-fit" + (fits ? " is-yes" : "") },
+          fits ? "يناسب سيارتك" : "لا يناسب سيارتك");
+        var title = card.querySelector("h3, h2");
+        title.parentNode.insertBefore(tag, title);
+      });
+    }
   }
 
   // ---------- logo ----------
