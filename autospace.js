@@ -378,6 +378,20 @@
       var wa = el("a", { href: "https://wa.me/" + WHATSAPP, class: "as-foot-wa", target: "_blank", rel: "noopener" }, "اطلب عبر واتساب");
       tel.parentElement.parentElement.appendChild(wa);
     }
+    // the theme doesn't list custom pages, so the store policies get their own column
+    var grid = f.querySelector(".theme-container > .grid");
+    if (grid && !f.querySelector(".as-foot-pages")) {
+      var ul = el("ul", { class: "mt-4 space-y-2" });
+      [["سياسة الاستبدال والإرجاع", 122800], ["الشروط والأحكام", 122801], ["سياسة الخصوصية", 122802]].forEach(function (p) {
+        var li = el("li", {});
+        li.appendChild(el("a", { href: "/pages/" + p[1] }, p[0]));
+        ul.appendChild(li);
+      });
+      var col = el("div", { class: "as-foot-pages" });
+      col.appendChild(el("h3", {}, "سياسات المتجر"));
+      col.appendChild(ul);
+      grid.appendChild(col);
+    }
   }
 
   // ---------- WhatsApp links ----------
