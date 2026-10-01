@@ -495,7 +495,11 @@
       cardBadges();
       prefillWhatsApp(V);
       emptySearch(V);
-    }).catch(function () { emptySearch(null); /* data unavailable: the store works without the other extras */ });
+    }).catch(function (e) {
+      // data unavailable or a theme change broke a step: the store works without the extras
+      if (window.console) console.warn("autospace:", e);
+      emptySearch(null);
+    });
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();
