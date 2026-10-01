@@ -323,11 +323,7 @@
   // ---------- 4. product cards: does this part fit the saved car? ----------
   // A model category lists the model's parts for every year, so a 2016 RAV4 also sees 2006 parts.
   // data/fit/<model id>.json (mo-auto/tools/build_fit_index.py) maps product id -> year spans for
-  // that model; each card gets "fits your car" (green) or the years it does fit (neutral).
-  function yearsLabel(spans) {
-    // each range in its own LTR island, or RTL flow shows "2018-2019" as "2019-2018"
-    return spans.map(function (s) { return '<bdi dir="ltr">' + (s[0] === s[1] ? s[0] : s[0] + "-" + s[1]) + "</bdi>"; }).join("، ");
-  }
+  // that model; each card says "fits your car" (green) or "does not fit your car" (neutral).
   function cardBadges() {
     var car = getCar();
     if (!car || !car.md || !document.querySelector("[data-wishlist-btn][data-product-id]")) return;
@@ -337,12 +333,13 @@
           var card = btn;
           while (card.parentElement && !card.querySelector('a[href*="/products/"] h3, a[href*="/products/"] h2, h3, h2')) card = card.parentElement;
           if (!card || card.querySelector(".as-card-fit")) return;
-          var spans = fit[btn.getAttribute("data-product-id").slice(0, 12)];
-          if (!spans) return;                                    // not for this model: no claim either way
-          var known = spans.filter(function (s) { return s[0]; });
-          var fits = !car.yr || !known.length || known.some(function (s) { return car.yr >= s[0] && car.yr <= s[1]; });
+          // not in the model's index = not listed for this model at all
+          var spans = fit[btn.getAttribute("data-product-id").slice(0, 12)] || [];
+          var known = spans.filter(function (s) { return s[0]; });   // [0, 0] = years unknown
+          var fits = spans.length > 0 && (!car.yr || !known.length ||
+            known.some(function (s) { return car.yr >= s[0] && car.yr <= s[1]; }));
           var tag = el("span", { class: "as-card-fit" + (fits ? " is-yes" : "") },
-            fits ? "يناسب سيارتك" : "يناسب " + yearsLabel(known));     // numbers only, no user text
+            fits ? "يناسب سيارتك" : "لا يناسب سيارتك");
           var title = card.querySelector("h3, h2");
           title.parentNode.insertBefore(tag, title);
         });
