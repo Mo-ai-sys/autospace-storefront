@@ -81,6 +81,11 @@
   // ---------- saved car ----------
   function getCar() { return store.get("car", null); }
   function setCar(car) { store.set("car", car); renderChip(); }
+  function clearCar() {
+    store.set("car", null);
+    renderChip();
+    if (document.querySelector(".as-fit")) location.reload();     // product page: fit badge goes back to neutral
+  }
   function carLabel(car, V) {
     var md = car && V.modelById[car.md];
     if (!md) return "";
@@ -101,7 +106,8 @@
     var sec = el("section", { id: "as-car", class: "as-picker", "aria-labelledby": "as-car-title" },
       '<div class="as-wrap">' +
         '<div class="as-head"><h2 id="as-car-title">اختر سيارتك</h2>' +
-        '<p>نعرض لك القطع التي تناسبها.</p></div>' +
+        '<p>نعرض لك القطع التي تناسبها.</p>' +
+        '<button type="button" class="as-clear" data-clear hidden>إزالة السيارة</button></div>' +
         '<div class="as-fields">' +
           '<label class="as-field"><span>الشركة</span><select data-f="mk"></select></label>' +
           '<label class="as-field"><span>الموديل</span><select data-f="md" disabled></select></label>' +
@@ -110,13 +116,17 @@
         "</div>" +
         '<form class="as-vin" novalidate>' +
           '<label for="as-vin-input">عندك رقم الهيكل (VIN)؟</label>' +
-          '<div class="as-vin-row"><input id="as-vin-input" maxlength="20" dir="ltr" autocomplete="off" ' +
-            'spellcheck="false" placeholder="17 خانة" inputmode="latin">' +
+          '<div class="as-vin-row"><div class="as-plate"><input id="as-vin-input" maxlength="17" dir="ltr" autocomplete="off" ' +
+            'spellcheck="false" placeholder="JTDBR32E720000000" inputmode="latin" aria-describedby="as-vin-count">' +
+            '<span class="as-vin-count" id="as-vin-count" dir="ltr">0/17</span></div>' +
           '<button type="submit" class="as-btn-ghost">اقرأ الرقم</button></div>' +
           '<p class="as-vin-out" role="status" aria-live="polite"></p>' +
         "</form>" +
       "</div>");
-    hero.parentNode.insertBefore(sec, hero.nextSibling);
+    // the picker is the hero's job: it sits inside the hero instead of a scroll-to button below it
+    var heroBox = hero.querySelector(".theme-container") || hero;
+    heroBox.appendChild(sec);
+    document.documentElement.classList.add("as-has-picker");
 
     var sMk = sec.querySelector('[data-f="mk"]'), sMd = sec.querySelector('[data-f="md"]'),
       sYr = sec.querySelector('[data-f="yr"]'), go = sec.querySelector("[data-go]");
@@ -144,7 +154,10 @@
     function sync(car) {
       fillMakes(car && car.mk); fillModels(car && car.mk, car && car.md); fillYears(car && car.md, car && car.yr);
       go.disabled = !(car && car.md);
+      clear.hidden = !(getCar());
     }
+    var clear = sec.querySelector("[data-clear]");
+    clear.addEventListener("click", function () { clearCar(); sync(null); sMk.focus(); });
     sync(getCar());
 
     sMk.addEventListener("change", function () {
@@ -164,7 +177,12 @@
 
     // VIN reader
     var form = sec.querySelector(".as-vin"), input = sec.querySelector("#as-vin-input"),
-      out = sec.querySelector(".as-vin-out");
+      out = sec.querySelector(".as-vin-out"), count = sec.querySelector(".as-vin-count");
+    input.addEventListener("input", function () {
+      input.value = input.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+      count.textContent = input.value.length + "/17";
+      count.classList.toggle("is-full", input.value.length === 17);
+    });
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       out.className = "as-vin-out"; out.textContent = "نقرأ رقم الهيكل...";
@@ -225,21 +243,25 @@
     if (!header) return;
     var chip = document.querySelector(".as-chip");
     if (!chip) {
+      var wrap = el("span", { class: "as-chip-wrap" });
       chip = el("a", { class: "as-chip" });
+      var x = el("button", { type: "button", class: "as-chip-x", "aria-label": "إزالة السيارة" }, "&times;");
+      x.addEventListener("click", function (e) { e.preventDefault(); clearCar(); });
+      wrap.appendChild(chip); wrap.appendChild(x);
       if (window.matchMedia("(max-width: 767px)").matches) {
         // phones: the header has no room, so the chip sits in a slim bar under it
         var bar = el("div", { class: "as-chip-bar" });
-        bar.appendChild(chip);
+        bar.appendChild(wrap);
         header.parentNode.insertBefore(bar, header.nextSibling);
       } else {
         var nav = header.querySelector("nav") || header;
-        nav.insertBefore(chip, nav.firstChild);
+        nav.insertBefore(wrap, nav.firstChild);
       }
     }
     var car = getCar(), label = car && carLabel(car, chipV);
     chip.href = label ? "/categories/" + car.md : "/#as-car";
-    chip.textContent = label || "اختر سيارتك";
-    chip.classList.toggle("is-set", !!label);
+    chip.textContent = label ? "سيارتي: " + label : "اختر سيارتك";
+    chip.parentNode.classList.toggle("is-set", !!label);
     chip.setAttribute("aria-label", label ? "سيارتك: " + label : "اختر سيارتك");
   }
 
@@ -309,7 +331,7 @@
     var png = head.getAttribute("src");
     [].forEach.call(document.querySelectorAll("img"), function (img) {
       if (img.getAttribute("src") !== png) return;
-      img.src = asset("logo/autospace-lockup.svg");
+      img.src = asset(img.closest("footer") ? "logo/autospace-lockup-reversed.svg" : "logo/autospace-lockup.svg");
       img.removeAttribute("srcset");
     });
   }
@@ -344,6 +366,11 @@
       }
     });
     var tel = f.querySelector('a[href^="tel:"]');
+    if (tel) {
+      [].forEach.call(tel.parentElement.querySelectorAll("svg"), function (svg) { svg.remove(); });
+      tel.textContent = "+966 59 892 9096";
+      tel.setAttribute("dir", "ltr");
+    }
     if (tel && !f.querySelector(".as-foot-wa")) {
       var wa = el("a", { href: "https://wa.me/" + WHATSAPP, class: "as-foot-wa", target: "_blank", rel: "noopener" }, "اطلب عبر واتساب");
       tel.parentElement.parentElement.appendChild(wa);

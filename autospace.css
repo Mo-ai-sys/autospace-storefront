@@ -1,73 +1,145 @@
-/* AutoSpace storefront additions. Tokens from brand/kit/colors/tokens.css. */
+/* AutoSpace storefront additions. Tokens from brand/kit/colors/tokens.css.
+   Design read: a parts store with one job, find the right part for this car, checked by VIN.
+   Signature: the VIN plate in the hero. Orange is for actions only, green only for a verified fit. */
+@import url("https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;500;600;700&display=swap");
+
 :root {
   --as-orange: #F15A30;
   --as-green: #00B49B;
   --as-gray: #B6BFC1;
   --as-black: #111314;
+  --as-panel: #1B1E20;      /* raised surface on the dark hero and footer */
   --as-paper: #F4F6F6;
   --as-ink-2: #4A5053;
   --as-line: #DDE1E2;
+  --as-line-dark: #34393C;
   --as-radius-box: 16px;
   --as-radius-btn: 10px;
+  --as-font: "Readex Pro", "IBM Plex Sans Arabic", system-ui, sans-serif;
 }
 
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }
 }
 
-/* ---------- car picker ---------- */
-.as-picker { padding: 32px 16px; background: #fff; scroll-margin-top: 80px; }
-@media (min-width: 768px) { .as-picker { padding: 48px 64px; } }
-.as-picker .as-wrap {
-  max-width: 1200px; margin: 0 auto; background: var(--as-paper); border: 1px solid var(--as-line);
-  border-radius: var(--as-radius-box); padding: 24px;
+/* ---------- type: Readex Pro, no light weights ---------- */
+html, body, button, input, select, textarea, h1, h2, h3, h4, h5, h6, p, a, span, li, label {
+  font-family: var(--as-font) !important;
 }
-@media (min-width: 768px) { .as-picker .as-wrap { padding: 32px; } }
-.as-head h2 { margin: 0; font-size: 24px; font-weight: 700; color: var(--as-black); line-height: 1.3; }
-.as-head p { margin: 6px 0 0; color: var(--as-ink-2); font-size: 16px; }
-.as-fields { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 20px; align-items: end; }
-@media (min-width: 768px) { .as-fields { grid-template-columns: 1.2fr 1.2fr 0.8fr auto; } }
-.as-field { display: grid; gap: 6px; font-size: 14px; font-weight: 500; color: var(--as-black); }
-.as-field select, .as-vin input {
-  height: 48px; width: 100%; border: 1px solid var(--as-gray); border-radius: var(--as-radius-btn);
-  background: #fff; color: var(--as-black); font: inherit; font-size: 16px; padding: 0 12px;
-}
-.as-field select:disabled { background: var(--as-paper); color: var(--as-ink-2); }
-.as-field select:focus-visible, .as-vin input:focus-visible, .as-btn:focus-visible, .as-btn-ghost:focus-visible,
-.as-chip:focus-visible { outline: 2px solid var(--as-orange); outline-offset: 2px; }
+body { font-weight: 400; -webkit-font-smoothing: antialiased; }
+header nav a, header nav button { font-weight: 500; }
+h1 { font-weight: 700 !important; }
+h2, h3 { font-weight: 600; }
+.btn { font-weight: 600; }
 
-/* brand rule: black text on orange (5.5:1) */
+/* ---------- hero: dark, the headline and the car picker are the whole job ---------- */
+.section-hero { background: var(--as-black); align-items: flex-start; padding-top: 48px; padding-bottom: 48px; }
+.section-hero > .absolute { display: none; }                       /* decorative illustration */
+.section-hero .theme-container { gap: 32px; max-width: 1200px; width: 100%; }
+.section-hero span.text-foreground { color: var(--as-gray); font-size: 13px; letter-spacing: 0; text-transform: none; }
+.section-hero h1 { color: #fff; font-size: 34px; line-height: 1.25; letter-spacing: 0; }
+.section-hero p.text-foreground { color: var(--as-gray); font-size: 17px; line-height: 1.7; max-width: 46ch; }
+.as-has-picker .section-hero a[href="#as-car"] { display: none; }   /* the picker is right here */
+@media (min-width: 768px) {
+  .section-hero { padding-top: 72px; padding-bottom: 72px; }
+  .section-hero h1 { font-size: 48px; }
+}
+
+/* ---------- car picker (inside the hero) ---------- */
+.as-picker { scroll-margin-top: 80px; width: 100%; }
+.as-picker .as-wrap {
+  background: var(--as-panel); border: 1px solid var(--as-line-dark); border-radius: var(--as-radius-box);
+  padding: 20px; color: #fff;
+}
+@media (min-width: 768px) { .as-picker .as-wrap { padding: 28px; } }
+.as-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.as-head h2 { margin: 0; font-size: 20px; font-weight: 700; color: #fff; line-height: 1.3; }
+.as-head p { margin: 0; color: var(--as-gray); font-size: 15px; }
+.as-clear {
+  margin-inline-start: auto; background: none; border: 0; padding: 4px 0; color: var(--as-gray);
+  font-size: 14px; font-weight: 500; text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
+}
+.as-clear:hover { color: #fff; }
+.as-fields { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 18px; align-items: end; }
+@media (min-width: 768px) { .as-fields { grid-template-columns: 1.2fr 1.2fr 0.8fr auto; } }
+.as-field { display: grid; gap: 6px; font-size: 14px; font-weight: 500; color: var(--as-gray); }
+.as-field select {
+  height: 52px; width: 100%; border: 1px solid transparent; border-radius: var(--as-radius-btn);
+  background: #fff; color: var(--as-black); font: inherit; font-size: 16px; font-weight: 500; padding: 0 12px;
+}
+.as-field select:disabled { background: #2A2E31; color: #8A9295; }
+.as-field select:focus-visible, .as-vin input:focus-visible, .as-btn:focus-visible, .as-btn-ghost:focus-visible,
+.as-chip:focus-visible, .as-chip-x:focus-visible, .as-clear:focus-visible { outline: 2px solid var(--as-orange); outline-offset: 2px; }
+
+/* brand rule: black text on orange (5.6:1) */
 .as-btn {
-  height: 48px; padding: 0 24px; border: 0; border-radius: var(--as-radius-btn); background: var(--as-orange);
+  height: 52px; padding: 0 28px; border: 0; border-radius: var(--as-radius-btn); background: var(--as-orange);
   color: var(--as-black); font: inherit; font-size: 16px; font-weight: 700; cursor: pointer; white-space: nowrap;
   transition: transform .15s ease, opacity .15s ease;
 }
 .as-btn:active { transform: translateY(1px); }
-.as-btn:disabled { opacity: .45; cursor: not-allowed; }
+.as-btn:disabled { opacity: .4; cursor: not-allowed; }
 .as-btn-ghost {
-  height: 48px; padding: 0 20px; border: 1px solid var(--as-black); border-radius: var(--as-radius-btn);
-  background: transparent; color: var(--as-black); font: inherit; font-size: 16px; font-weight: 500;
+  height: 52px; padding: 0 20px; border: 1px solid #fff; border-radius: var(--as-radius-btn);
+  background: transparent; color: #fff; font: inherit; font-size: 16px; font-weight: 600;
   cursor: pointer; white-space: nowrap;
 }
-.as-vin { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--as-line); }
-.as-vin label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; color: var(--as-black); }
-.as-vin-row { display: flex; gap: 8px; max-width: 520px; }
-.as-vin input { letter-spacing: .06em; text-transform: uppercase; }
-.as-vin-out { margin: 10px 0 0; font-size: 15px; color: var(--as-ink-2); min-height: 1.4em; }
-.as-vin-out.is-bad { color: #B42318; }
-.as-vin-out a, .as-fit a { color: var(--as-black); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.as-btn-ghost:hover { background: rgba(255, 255, 255, .08); }
 
-/* ---------- header chip ---------- */
-.as-chip {
-  display: inline-flex; align-items: center; height: 36px; padding: 0 14px; margin-inline-end: 12px;
-  border: 1px solid var(--as-gray); border-radius: 999px; font-size: 14px; font-weight: 500;
-  color: var(--as-black); background: #fff; text-decoration: none; white-space: nowrap;
-  max-width: 44vw; overflow: hidden; text-overflow: ellipsis;
+/* signature: the VIN plate, a stamped vehicle ID strip */
+.as-vin { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--as-line-dark); }
+.as-vin label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px; color: var(--as-gray); }
+.as-vin-row { display: flex; gap: 8px; max-width: 620px; }
+.as-plate {
+  position: relative; flex: 1; display: flex; align-items: center; border-radius: var(--as-radius-btn);
+  background: var(--as-paper); border: 2px solid var(--as-gray);
+  box-shadow: inset 0 0 0 3px var(--as-paper), inset 0 0 0 4px var(--as-line);
 }
-.as-chip.is-set { border-color: var(--as-black); }
+.as-plate input {
+  height: 52px; width: 100%; border: 0; background: transparent; color: var(--as-black); padding: 0 64px 0 14px;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace !important;
+  font-size: 18px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+}
+.as-plate input::placeholder { color: #A3AAAD; font-weight: 500; }
+.as-plate input:focus-visible { outline: none; }
+.as-plate:focus-within { border-color: var(--as-orange); }
+.as-vin-count {
+  position: absolute; right: 12px; font-size: 13px; font-weight: 600; color: var(--as-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.as-vin-count.is-full { color: #007A69; }        /* 17 of 17: green text on paper, 4.9:1 */
+.as-vin-out { margin: 10px 0 0; font-size: 15px; color: var(--as-gray); min-height: 1.4em; }
+.as-vin-out b { color: #fff; }
+.as-vin-out.is-bad { color: #FF8A6B; }           /* on the dark panel, 6.4:1 */
+.as-vin-out a { color: #fff; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.as-fit a { color: var(--as-black); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 480px) {
+  .as-vin-row { flex-direction: column; }
+  .as-btn-ghost { width: 100%; }
+}
+
+/* ---------- header chip: the saved car, with a remove button ---------- */
+.as-chip-wrap {
+  display: inline-flex; align-items: center; height: 38px; margin-inline-end: 12px;
+  border: 1px solid var(--as-gray); border-radius: 999px; background: #fff; max-width: 52vw;
+}
+.as-chip-wrap.is-set { border-color: var(--as-black); }
+.as-chip {
+  display: inline-flex; align-items: center; height: 100%; padding: 0 14px; font-size: 14px; font-weight: 500;
+  color: var(--as-black); text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.as-chip-x {
+  display: none; width: 30px; height: 30px; margin-inline-end: 4px; border: 0; border-radius: 999px;
+  background: var(--as-paper); color: var(--as-black); font-size: 18px; line-height: 1; cursor: pointer;
+}
+.as-chip-wrap.is-set .as-chip { padding-inline-end: 6px; }
+.as-chip-wrap.is-set .as-chip-x { display: inline-grid; place-items: center; }
+.as-chip-x:hover { background: var(--as-line); }
 .as-chip-bar { display: flex; justify-content: flex-start; padding: 8px 16px; background: #fff;
   border-bottom: 1px solid var(--as-line); }
-.as-chip-bar .as-chip { margin: 0; max-width: 100%; height: 34px; font-size: 14px; }
+.as-chip-bar .as-chip-wrap { margin: 0; max-width: 100%; height: 38px; }
+/* phones: keep the chip bar out of the open menu drawer */
+body:has(#mobile-drawer-dialog[open]) .as-chip-bar { display: none; }
 
 /* ---------- product page ---------- */
 .as-fit {
@@ -92,10 +164,12 @@
   [data-grid-root][data-grid="one"] h3, [data-grid-root][data-grid="one"] h2 { font-size: 14px; line-height: 1.45; }
 }
 
-/* footer: keep the phone number in left-to-right order, WhatsApp link under it */
-footer a[href^="tel:"] { direction: ltr; unicode-bidi: isolate; display: inline-block; }
-.as-foot-wa { display: inline-block; margin-top: 8px; font-size: 14px; font-weight: 500; color: var(--as-black);
+/* ---------- footer: dark, logo reversed, contact first ---------- */
+footer { background: var(--as-black) !important; color: var(--as-paper); }
+footer p, footer h3, footer span, footer a { color: var(--as-paper) !important; }
+footer h3 { font-size: 15px; font-weight: 600; }
+footer p { color: var(--as-gray) !important; font-size: 15px; line-height: 1.7; }
+footer a[href^="tel:"] { direction: ltr; unicode-bidi: isolate; display: inline-block; font-size: 16px; font-weight: 600; margin: 0; }
+footer .border-t, footer [class*="border"] { border-color: var(--as-line-dark) !important; }
+.as-foot-wa { display: inline-block; margin-top: 10px; font-size: 15px; font-weight: 600;
   text-decoration: underline; text-underline-offset: 3px; }
-
-/* phones: the car chip bar sits under the header; keep it out of the open menu drawer */
-body:has(#mobile-drawer-dialog[open]) .as-chip-bar { display: none; }
