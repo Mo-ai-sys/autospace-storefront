@@ -193,3 +193,6 @@ footer img[src*="autospace-lockup"] { width: 168px !important; height: auto !imp
   border-radius: var(--as-radius-box); background: var(--as-paper); text-align: center; }
 .as-nofind p { margin: 0 0 14px; font-size: 16px; line-height: 1.7; color: var(--as-black); }
 .as-nofind .as-btn { display: inline-flex; align-items: center; text-decoration: none; }
+/* one primary action: the theme's "show all products" steps back to an outlined button */
+div:has(> .as-nofind) > a:not(.as-btn), div:has(> .as-nofind) > button {
+  background: #fff !important; color: var(--as-black) !important; border: 1.5px solid var(--as-black) !important; }
