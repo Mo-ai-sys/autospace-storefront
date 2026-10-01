@@ -174,3 +174,8 @@ footer .border-t, footer [class*="border"] { border-color: var(--as-line-dark) !
 .as-foot-wa { display: inline-block; margin-top: 10px; font-size: 15px; font-weight: 600;
   text-decoration: underline; text-underline-offset: 3px; }
 footer img[src*="autospace-lockup"] { width: 168px !important; height: auto !important; max-height: none !important; }
+
+/* product page: one primary action. "Add to cart" stays orange, "Buy now" becomes the outlined secondary */
+.btn.btn-buy-now { background: #fff !important; color: var(--as-black) !important; border: 1.5px solid var(--as-black) !important; }
+.btn.btn-buy-now svg { color: var(--as-black); }
+.btn.btn-buy-now:hover { background: var(--as-paper) !important; }
