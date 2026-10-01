@@ -179,3 +179,8 @@ footer img[src*="autospace-lockup"] { width: 168px !important; height: auto !imp
 .btn.btn-buy-now { background: #fff !important; color: var(--as-black) !important; border: 1.5px solid var(--as-black) !important; }
 .btn.btn-buy-now svg { color: var(--as-black); }
 .btn.btn-buy-now:hover { background: var(--as-paper) !important; }
+
+/* product options: a selected option is a state, not an action, so it is black, not orange */
+.product-options__item.active { background: var(--as-black) !important; border-color: var(--as-black) !important; }
+.product-options__item.active, .product-options__item.active * { color: #fff !important; }
+.product-options__item { border-radius: var(--as-radius-btn) !important; font-weight: 500; }
