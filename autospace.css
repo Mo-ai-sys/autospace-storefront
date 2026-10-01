@@ -187,3 +187,9 @@ footer img[src*="autospace-lockup"] { width: 168px !important; height: auto !imp
 
 /* policy pages: section headings typed as plain lines in the page editor */
 .prose > p.as-policy-h { font-size: 18px; font-weight: 700; color: var(--as-black); margin-top: 28px; margin-bottom: 8px; }
+
+/* empty search: hand the request to WhatsApp */
+.as-nofind { max-width: 520px; margin: 8px auto 0; padding: 20px; border: 1px solid var(--as-line);
+  border-radius: var(--as-radius-box); background: var(--as-paper); text-align: center; }
+.as-nofind p { margin: 0 0 14px; font-size: 16px; line-height: 1.7; color: var(--as-black); }
+.as-nofind .as-btn { display: inline-flex; align-items: center; text-decoration: none; }

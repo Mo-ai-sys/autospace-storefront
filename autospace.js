@@ -428,6 +428,27 @@
     }).observe(box, { childList: true, subtree: true });
   }
 
+  // Zid's search matches names only, not part numbers. When a search finds nothing,
+  // offer to look the part up on WhatsApp with the query and the saved car already written.
+  function emptySearch(V) {
+    var q = new URLSearchParams(location.search).get("q");
+    if (!q || location.pathname !== "/products") return;
+    var h = [].filter.call(document.querySelectorAll("h3"), function (x) {
+      return x.textContent.trim() === "لم يتم العثور على نتائج";
+    })[0];
+    if (!h || document.querySelector(".as-nofind")) return;
+    var car = getCar();
+    var label = car && V ? carLabel(car, V) : "";
+    var isNumber = /\d{3}/.test(q) && /^[A-Za-z0-9\- ]+$/.test(q);
+    var text = "السلام عليكم، أبحث عن " + (isNumber ? "القطعة رقم " : "") + q.trim() +
+      (label ? " لسيارتي " + label : "") + ". رقم الهيكل (VIN): ";
+    var box = el("div", { class: "as-nofind" },
+      "<p>" + (isNumber ? "ما ظهر رقم القطعة في البحث؟" : "ما لقيت القطعة؟") +
+      " أرسل طلبك عبر واتساب مع رقم الهيكل (VIN)، ونتحقق منها ونوفرها لك.</p>");
+    box.appendChild(el("a", { href: wa(text), class: "as-btn", target: "_blank", rel: "noopener" }, "اطلب عبر واتساب"));
+    h.parentElement.appendChild(box);
+  }
+
   // ---------- boot ----------
   function boot() {
     arabicSearchPrices();
@@ -442,7 +463,8 @@
       buildPicker(V);
       productCheck(V);
       prefillWhatsApp(V);
-    }).catch(function () { /* data unavailable: the store works without these extras */ });
+      emptySearch(V);
+    }).catch(function () { emptySearch(null); /* data unavailable: the store works without the other extras */ });
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();
