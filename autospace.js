@@ -84,7 +84,7 @@
   function clearCar() {
     store.set("car", null);
     renderChip();
-    if (document.querySelector(".as-fit")) location.reload();     // product page: fit badge goes back to neutral
+    if (document.querySelector(".as-fit, .as-card-fit")) location.reload();   // fit badges go back to neutral
   }
   function carLabel(car, V) {
     var md = car && V.modelById[car.md];
@@ -260,7 +260,7 @@
     }
     var car = getCar(), label = car && carLabel(car, chipV);
     chip.href = label ? "/categories/" + car.md : "/#as-car";
-    chip.textContent = label ? "سيارتي: " + label : "اختر سيارتك";
+    chip.innerHTML = label ? '<span class="as-chip-k">سيارتي</span> <b>' + esc(label) + "</b>" : "اختر سيارتك";
     chip.parentNode.classList.toggle("is-set", !!label);
     chip.setAttribute("aria-label", label ? "سيارتك: " + label : "اختر سيارتك");
   }
@@ -318,6 +318,38 @@
     var h1 = document.querySelector("h1");
     var anchor = h1 && h1.offsetParent !== null ? h1 : table;
     anchor.parentNode.insertBefore(box, anchor.nextSibling);
+  }
+
+  // ---------- 4. product cards: does this part fit the saved car? ----------
+  // A model category lists the model's parts for every year, so a 2016 RAV4 also sees 2006 parts.
+  // data/fit/<model id>.json (mo-auto/tools/build_fit_index.py) maps product id -> year spans for
+  // that model; each card gets "fits your car" (green) or the years it does fit (neutral).
+  function yearsLabel(spans) {
+    return spans.map(function (s) { return s[0] === s[1] ? s[0] : s[0] + "-" + s[1]; }).join("، ");
+  }
+  function cardBadges() {
+    var car = getCar();
+    if (!car || !car.md || !document.querySelector("[data-wishlist-btn][data-product-id]")) return;
+    fetch(asset("data/fit/" + car.md + ".json")).then(function (r) { return r.ok ? r.json() : {}; }).then(function (fit) {
+      function mark() {
+        [].forEach.call(document.querySelectorAll("[data-wishlist-btn][data-product-id]"), function (btn) {
+          var card = btn;
+          while (card.parentElement && !card.querySelector('a[href*="/products/"] h3, a[href*="/products/"] h2, h3, h2')) card = card.parentElement;
+          if (!card || card.querySelector(".as-card-fit")) return;
+          var spans = fit[btn.getAttribute("data-product-id").slice(0, 12)];
+          if (!spans) return;                                    // not for this model: no claim either way
+          var known = spans.filter(function (s) { return s[0]; });
+          var fits = !car.yr || !known.length || known.some(function (s) { return car.yr >= s[0] && car.yr <= s[1]; });
+          var tag = el("span", { class: "as-card-fit" + (fits ? " is-yes" : "") },
+            fits ? "يناسب سيارتك" : "يناسب " + esc(yearsLabel(known)));
+          var title = card.querySelector("h3, h2");
+          title.parentNode.insertBefore(tag, title);
+        });
+      }
+      mark();
+      var grid = document.querySelector("[data-grid-root]");
+      if (grid) new MutationObserver(mark).observe(grid, { childList: true, subtree: true });
+    }).catch(function () { /* no index for this model: cards stay as they are */ });
   }
 
   // ---------- logo ----------
@@ -462,6 +494,7 @@
       renderChip();
       buildPicker(V);
       productCheck(V);
+      cardBadges();
       prefillWhatsApp(V);
       emptySearch(V);
     }).catch(function () { emptySearch(null); /* data unavailable: the store works without the other extras */ });
