@@ -18,6 +18,15 @@
   function asset(path) { return BASE + path + (VERSION ? "?" + VERSION : ""); }
   var WHATSAPP = "966598929096";
 
+  // ---------- language ----------
+  // Zid serves English under /en with the same theme. PATH is the path without that prefix, so page
+  // checks work in both languages; PRE goes in front of every link we build.
+  var EN = /^\/en(\/|$)/.test(location.pathname) || (document.documentElement.lang || "").indexOf("en") === 0;
+  var PRE = EN ? "/en" : "";
+  var PATH = EN ? (location.pathname.replace(/^\/en/, "") || "/") : location.pathname;
+  function T(ar, en) { return EN ? en : ar; }
+  function nm(o) { return EN ? (o.en || o.ar) : o.ar; }          // make or model name in the page language
+
   // ---------- small helpers ----------
   function el(tag, attrs, html) {
     var e = document.createElement(tag);
@@ -89,7 +98,29 @@
   function carLabel(car, V) {
     var md = car && V.modelById[car.md];
     if (!md) return "";
-    return md.ar + (car.yr ? " " + car.yr : "");
+    return nm(md) + (car.yr ? " " + car.yr : "");
+  }
+  function modelShort(md) {                                      // "Toyota Camry" -> "Camry"
+    var full = nm(md), mk = nm(md.make);
+    return full.indexOf(mk + " ") === 0 ? full.slice(mk.length + 1) : full;
+  }
+
+  // per-model fitment index (mo-auto/tools/build_fit_index.py): product id[:12] -> [[from, to], ...]
+  var fitCache = {};
+  function fitIndex(mdId) {
+    if (!fitCache[mdId]) {
+      fitCache[mdId] = fetch(asset("data/fit/" + mdId + ".json"))
+        .then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+    }
+    return fitCache[mdId];
+  }
+  // true/false for a product and the saved car; null when there's no index to answer from
+  function fitsCar(fit, productId, car) {
+    if (!fit || !productId) return null;
+    var spans = fit[productId.slice(0, 12)] || [];               // not in the index = not listed for this model
+    var known = spans.filter(function (s) { return s[0]; });     // [0, 0] = years unknown
+    return spans.length > 0 && (!car.yr || !known.length ||
+      known.some(function (s) { return car.yr >= s[0] && car.yr <= s[1]; }));
   }
 
   // ---------- 1. car picker ----------
@@ -105,21 +136,21 @@
     if (!hero || document.getElementById("as-car")) return;
     var sec = el("section", { id: "as-car", class: "as-picker", "aria-labelledby": "as-car-title" },
       '<div class="as-wrap">' +
-        '<div class="as-head"><h2 id="as-car-title">اختر سيارتك</h2>' +
-        '<p>نعرض لك القطع التي تناسبها.</p>' +
-        '<button type="button" class="as-clear" data-clear hidden>إزالة السيارة</button></div>' +
+        '<div class="as-head"><h2 id="as-car-title">' + T("اختر سيارتك", "Choose your car") + "</h2>" +
+        "<p>" + T("نعرض لك القطع التي تناسبها.", "We show you the parts that fit it.") + "</p>" +
+        '<button type="button" class="as-clear" data-clear hidden>' + T("إزالة السيارة", "Remove car") + "</button></div>" +
         '<div class="as-fields">' +
-          '<label class="as-field"><span>الشركة</span><select data-f="mk"></select></label>' +
-          '<label class="as-field"><span>الموديل</span><select data-f="md" disabled></select></label>' +
-          '<label class="as-field"><span>السنة</span><select data-f="yr" disabled></select></label>' +
-          '<button type="button" class="as-btn" data-go disabled>اعرض القطع</button>' +
+          '<label class="as-field"><span>' + T("الشركة", "Make") + '</span><select data-f="mk"></select></label>' +
+          '<label class="as-field"><span>' + T("الموديل", "Model") + '</span><select data-f="md" disabled></select></label>' +
+          '<label class="as-field"><span>' + T("السنة", "Year") + '</span><select data-f="yr" disabled></select></label>' +
+          '<button type="button" class="as-btn" data-go disabled>' + T("اعرض القطع", "Show parts") + "</button>" +
         "</div>" +
         '<form class="as-vin" novalidate>' +
-          '<label for="as-vin-input">عندك رقم الهيكل (VIN)؟</label>' +
+          '<label for="as-vin-input">' + T("عندك رقم الهيكل (VIN)؟", "Have your VIN?") + "</label>" +
           '<div class="as-vin-row"><div class="as-plate"><input id="as-vin-input" maxlength="17" dir="ltr" autocomplete="off" ' +
             'spellcheck="false" placeholder="JTDBR32E720000000" inputmode="latin" aria-describedby="as-vin-count">' +
             '<span class="as-vin-count" id="as-vin-count" dir="ltr">0/17</span></div>' +
-          '<button type="submit" class="as-btn-ghost">اقرأ الرقم</button></div>' +
+          '<button type="submit" class="as-btn-ghost">' + T("اقرأ الرقم", "Read VIN") + "</button></div>" +
           '<p class="as-vin-out" role="status" aria-live="polite"></p>' +
         "</form>" +
       "</div>");
@@ -132,22 +163,21 @@
       sYr = sec.querySelector('[data-f="yr"]'), go = sec.querySelector("[data-go]");
 
     function fillMakes(sel) {
-      sMk.innerHTML = '<option value="">اختر الشركة</option>' + V.makes.map(function (mk) {
-        return '<option value="' + mk.id + '"' + (mk.id === sel ? " selected" : "") + ">" + esc(mk.ar) + "</option>";
+      sMk.innerHTML = '<option value="">' + T("اختر الشركة", "Choose make") + "</option>" + V.makes.map(function (mk) {
+        return '<option value="' + mk.id + '"' + (mk.id === sel ? " selected" : "") + ">" + esc(nm(mk)) + "</option>";
       }).join("");
     }
     function fillModels(mkId, sel) {
       var mk = V.makeById[mkId];
       sMd.disabled = !mk;
-      sMd.innerHTML = '<option value="">اختر الموديل</option>' + (mk ? mk.models.map(function (md) {
-        var short = md.ar.indexOf(mk.ar + " ") === 0 ? md.ar.slice(mk.ar.length + 1) : md.ar;
-        return '<option value="' + md.id + '"' + (md.id === sel ? " selected" : "") + ">" + esc(short) + "</option>";
+      sMd.innerHTML = '<option value="">' + T("اختر الموديل", "Choose model") + "</option>" + (mk ? mk.models.map(function (md) {
+        return '<option value="' + md.id + '"' + (md.id === sel ? " selected" : "") + ">" + esc(modelShort(md)) + "</option>";
       }).join("") : "");
     }
     function fillYears(mdId, sel) {
       var ys = yearsFor(V.modelById[mdId]);
       sYr.disabled = !ys.length;
-      sYr.innerHTML = '<option value="">كل السنوات</option>' + ys.map(function (y) {
+      sYr.innerHTML = '<option value="">' + T("كل السنوات", "All years") + "</option>" + ys.map(function (y) {
         return '<option value="' + y + '"' + (y === sel ? " selected" : "") + ">" + y + "</option>";
       }).join("");
     }
@@ -172,7 +202,7 @@
       var car = { mk: Number(sMk.value), md: Number(sMd.value), yr: Number(sYr.value) || null };
       if (!car.md) return;
       setCar(car);
-      location.href = "/categories/" + car.md;
+      location.href = PRE + "/categories/" + car.md;
     });
 
     // VIN reader
@@ -185,9 +215,12 @@
     });
     form.addEventListener("submit", function (e) {
       e.preventDefault();
-      out.className = "as-vin-out"; out.textContent = "نقرأ رقم الهيكل...";
+      out.className = "as-vin-out"; out.textContent = T("نقرأ رقم الهيكل...", "Reading your VIN...");
       vinDecoder().then(function (MoVIN) {
-        if (!MoVIN) { out.textContent = "تعذر قراءة الرقم الآن. اختر سيارتك من القوائم."; return; }
+        if (!MoVIN) {
+          out.textContent = T("تعذر قراءة الرقم الآن. اختر سيارتك من القوائم.", "We can't read the VIN right now. Choose your car from the lists.");
+          return;
+        }
         return MoVIN.decode(input.value).then(function (d) { showVin(d); });
       });
     });
@@ -213,14 +246,19 @@
     function showVin(d) {
       if (!d.valid) {
         out.className = "as-vin-out is-bad";
-        out.textContent = "رقم الهيكل 17 خانة، ولا يحتوي على الحروف I و O و Q.";
+        out.textContent = T("رقم الهيكل 17 خانة، ولا يحتوي على الحروف I و O و Q.",
+          "A VIN has 17 characters and never contains the letters I, O or Q.");
         return;
       }
       store.set("vin", d.vin);
       var mk = d.make && matchMake(d.make);
       if (!mk) {
-        out.innerHTML = (d.make ? "سيارتك " + esc(d.make) + "، وهذه الشركة غير موجودة في المتجر حالياً. " : "ما قدرنا نحدد الشركة من هذا الرقم. ") +
-          '<a href="' + wa("السلام عليكم، أبحث عن قطعة لسيارتي. رقم الهيكل: " + d.vin) + '" target="_blank" rel="noopener">اطلب عبر واتساب</a>';
+        out.innerHTML = (d.make
+            ? T("سيارتك " + esc(d.make) + "، وهذه الشركة غير موجودة في المتجر حالياً. ",
+                "Your car is a " + esc(d.make) + ", a make we don't stock yet. ")
+            : T("ما قدرنا نحدد الشركة من هذا الرقم. ", "We couldn't tell the make from this VIN. ")) +
+          '<a href="' + wa(T("السلام عليكم، أبحث عن قطعة لسيارتي. رقم الهيكل: ", "Hello, I'm looking for a part for my car. VIN: ") + d.vin) +
+          '" target="_blank" rel="noopener">' + T("اطلب عبر واتساب", "Order on WhatsApp") + "</a>";
         return;
       }
       var md = d.model ? matchModel(mk, d.model) : null;
@@ -228,9 +266,11 @@
       var yr = d.year && d.yearSure && ys.indexOf(d.year) >= 0 ? d.year : null;
       sync({ mk: mk.id, md: md ? md.id : null, yr: yr });
       if (md) setCar({ mk: mk.id, md: md.id, yr: yr });
-      var parts = [mk.ar, md ? md.ar.replace(mk.ar + " ", "") : null, yr].filter(Boolean).join("، ");
-      out.innerHTML = "قرأنا من رقم الهيكل: <b>" + esc(parts) + "</b>. " +
-        (!md ? "اختر الموديل من القائمة." : !yr ? "اختر السنة، أو اعرض القطع لكل السنوات." : "سيارتك جاهزة.");
+      var parts = [nm(mk), md ? modelShort(md) : null, yr].filter(Boolean).join(T("، ", ", "));
+      out.innerHTML = T("قرأنا من رقم الهيكل: ", "From your VIN: ") + "<b>" + esc(parts) + "</b>. " +
+        (!md ? T("اختر الموديل من القائمة.", "Choose the model from the list.")
+          : !yr ? T("اختر السنة، أو اعرض القطع لكل السنوات.", "Choose the year, or show parts for all years.")
+          : T("سيارتك جاهزة.", "Your car is set."));
       (md ? go : sMd).focus();
     }
   }
@@ -245,7 +285,7 @@
     if (!chip) {
       var wrap = el("span", { class: "as-chip-wrap" });
       chip = el("a", { class: "as-chip" });
-      var x = el("button", { type: "button", class: "as-chip-x", "aria-label": "إزالة السيارة" }, "&times;");
+      var x = el("button", { type: "button", class: "as-chip-x", "aria-label": T("إزالة السيارة", "Remove car") }, "&times;");
       x.addEventListener("click", function (e) { e.preventDefault(); clearCar(); });
       wrap.appendChild(chip); wrap.appendChild(x);
       if (window.matchMedia("(max-width: 767px)").matches) {
@@ -259,10 +299,11 @@
       }
     }
     var car = getCar(), label = car && carLabel(car, chipV);
-    chip.href = label ? "/categories/" + car.md : "/#as-car";
-    chip.innerHTML = label ? '<span class="as-chip-k">سيارتي</span> <b>' + esc(label) + "</b>" : "اختر سيارتك";
+    chip.href = label ? PRE + "/categories/" + car.md : PRE + "/#as-car";
+    chip.innerHTML = label ? '<span class="as-chip-k">' + T("سيارتي", "My car") + "</span> <b>" + esc(label) + "</b>"
+      : T("اختر سيارتك", "Choose your car");
     chip.parentNode.classList.toggle("is-set", !!label);
-    chip.setAttribute("aria-label", label ? "سيارتك: " + label : "اختر سيارتك");
+    chip.setAttribute("aria-label", label ? T("سيارتك: ", "Your car: ") + label : T("اختر سيارتك", "Choose your car"));
   }
 
   // ---------- 3. product page ----------
@@ -292,32 +333,50 @@
     var title = (document.querySelector("h1") || {}).textContent || "";
     var car = getCar(), md = car && V.modelById[car.md], label = car ? carLabel(car, V) : "";
 
-    var verdict = "none";
+    // highlight the table rows for the saved car. Arabic rows match the model's short names; English
+    // rows use catalogue spellings ("Camry", "ES350"), so they match loosely on make + model.
+    var rowMatch = false;
     if (md) {
-      var shorts = md.short.map(norm), mkName = norm(md.make.ar);
+      var shorts = md.short.map(norm), mkAr = norm(md.make.ar), mkEn = simple(md.make.en);
+      var mdEn = simple(md.en.replace(md.make.en, ""));
       rows.forEach(function (r) {
-        if (norm(r.make) !== mkName || shorts.indexOf(norm(r.model)) < 0) return;
-        if (car.yr && r.from && (car.yr < r.from || car.yr > r.to)) return;
-        verdict = "yes"; r.tr.classList.add("is-match");
+        var en = simple(r.model);
+        var same = norm(r.make) === mkAr ? shorts.indexOf(norm(r.model)) >= 0
+          : simple(r.make) === mkEn && !!en && !!mdEn && (en === mdEn || en.indexOf(mdEn) === 0 || mdEn.indexOf(en) === 0);
+        if (!same || (car.yr && r.from && (car.yr < r.from || car.yr > r.to))) return;
+        rowMatch = true; r.tr.classList.add("is-match");
       });
-      if (verdict !== "yes") verdict = "no";
     }
 
-    var ask = wa("السلام عليكم، أبي أتأكد من القطعة: " + title.trim() + (sku ? " رقم " + sku : "") +
-      (label ? " لسيارتي " + label : "") + ". رقم الهيكل: " + (store.get("vin", "") || ""));
-    var box = el("div", { class: "as-fit as-fit--" + verdict, role: "status" });
-    if (verdict === "yes") {
-      box.innerHTML = "<b>تناسب سيارتك</b> " + esc(label) + '<span class="as-fit-note">نتحقق من القطعة برقم الهيكل (VIN) مع طلبك.</span>';
-    } else if (verdict === "no") {
-      box.innerHTML = "سيارتك " + esc(label) + " غير موجودة في جدول التوافق لهذه القطعة. " +
-        '<a href="' + ask + '" target="_blank" rel="noopener">اطلب عبر واتساب</a> ونتأكد لك برقم الهيكل.';
-    } else {
-      box.innerHTML = '<a href="/#as-car">اختر سيارتك</a> ونبين لك إذا القطعة تناسبها، أو ' +
-        '<a href="' + ask + '" target="_blank" rel="noopener">اطلب عبر واتساب</a> مع رقم الهيكل.';
-    }
-    var h1 = document.querySelector("h1");
-    var anchor = h1 && h1.offsetParent !== null ? h1 : table;
-    anchor.parentNode.insertBefore(box, anchor.nextSibling);
+    var meta = document.querySelector('meta[property="product:retailer_item_id"]');
+    var productId = meta && meta.getAttribute("content");
+    (md ? fitIndex(car.md) : Promise.resolve(null)).then(function (fit) {
+      // the fitment index decides when it can (same answer as the product cards); otherwise the table rows
+      var fits = md ? fitsCar(fit, productId, car) : null;
+      var verdict = !md ? "none" : (fits === null ? rowMatch : fits) ? "yes" : "no";
+      if (document.querySelector(".as-fit")) return;
+
+      var ask = wa(T("السلام عليكم، أبي أتأكد من القطعة: ", "Hello, I'd like to confirm this part: ") + title.trim() +
+        (sku ? T(" رقم ", ", part number ") + sku : "") + (label ? T(" لسيارتي ", " for my car ") + label : "") +
+        T(". رقم الهيكل: ", ". VIN: ") + (store.get("vin", "") || ""));
+      var order = '<a href="' + ask + '" target="_blank" rel="noopener">' + T("اطلب عبر واتساب", "Order on WhatsApp") + "</a>";
+      var box = el("div", { class: "as-fit as-fit--" + verdict, role: "status" });
+      if (verdict === "yes") {
+        box.innerHTML = "<b>" + T("تناسب سيارتك", "Fits your car") + "</b> " + esc(label) + '<span class="as-fit-note">' +
+          T("نتحقق من القطعة برقم الهيكل (VIN) مع طلبك.", "We check the part against your VIN with your order.") + "</span>";
+      } else if (verdict === "no") {
+        box.innerHTML = T("سيارتك " + esc(label) + " غير موجودة في جدول التوافق لهذه القطعة. ",
+          "Your " + esc(label) + " isn't in this part's fitment table. ") +
+          order + T(" ونتأكد لك برقم الهيكل.", " and we'll check it by VIN.");
+      } else {
+        box.innerHTML = '<a href="' + PRE + '/#as-car">' + T("اختر سيارتك", "Choose your car") + "</a>" +
+          T(" ونبين لك إذا القطعة تناسبها، أو ", " to see if this part fits it, or ") + order +
+          T(" مع رقم الهيكل.", " with your VIN.");
+      }
+      var h1 = document.querySelector("h1");
+      var anchor = h1 && h1.offsetParent !== null ? h1 : table;
+      anchor.parentNode.insertBefore(box, anchor.nextSibling);
+    });
   }
 
   // ---------- 4. product cards: does this part fit the saved car? ----------
@@ -330,16 +389,14 @@
     if (!car || !car.md) return;
     // the theme renders product cards after load, and again on paging: watch the page, fetch the
     // model's index when the first card shows up, then mark every new card
-    var fitPromise = null, queued = false;
+    var queued = false;
     function onChange() {
       if (queued || !document.querySelector(CARD)) return;
       queued = true;
       requestAnimationFrame(function () { queued = false; run(); });
     }
     function run() {
-      fitPromise = fitPromise || fetch(asset("data/fit/" + car.md + ".json"))
-        .then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
-      fitPromise.then(function (fit) { if (fit) mark(fit); });
+      fitIndex(car.md).then(function (fit) { if (fit) mark(fit); });
     }
     new MutationObserver(onChange).observe(document.body, { childList: true, subtree: true });
     onChange();
@@ -349,13 +406,9 @@
         var card = btn;
         while (card.parentElement && !card.querySelector('a[href*="/products/"] h3, a[href*="/products/"] h2, h3, h2')) card = card.parentElement;
         if (!card || card.querySelector(".as-card-fit")) return;
-        // not in the model's index = not listed for this model at all
-        var spans = fit[btn.getAttribute("data-product-id").slice(0, 12)] || [];
-        var known = spans.filter(function (s) { return s[0]; });   // [0, 0] = years unknown
-        var fits = spans.length > 0 && (!car.yr || !known.length ||
-          known.some(function (s) { return car.yr >= s[0] && car.yr <= s[1]; }));
+        var fits = fitsCar(fit, btn.getAttribute("data-product-id"), car);
         var tag = el("span", { class: "as-card-fit" + (fits ? " is-yes" : "") },
-          fits ? "يناسب سيارتك" : "لا يناسب سيارتك");
+          fits ? T("يناسب سيارتك", "Fits your car") : T("لا يناسب سيارتك", "Doesn't fit your car"));
         var title = card.querySelector("h3, h2");
         title.parentNode.insertBefore(tag, title);
       });
@@ -368,7 +421,7 @@
   function sharpLogo() {
     var icon = el("link", { rel: "icon", type: "image/svg+xml", href: asset("logo/autospace-symbol.svg") });
     document.head.appendChild(icon);
-    var head = document.querySelector('header a[href="/"] img');
+    var head = document.querySelector('header a[href="/"] img, header a[href="/en/"] img, header a[href="/en"] img');
     if (!head) return;
     var png = head.getAttribute("src");
     [].forEach.call(document.querySelectorAll("img"), function (img) {
@@ -382,9 +435,9 @@
   // Parent categories (a make, a part group) hold their products in the subcategories, so the theme
   // shows "no products" under the subcategory tiles. Hide that box when tiles are there to pick from.
   function tidyCategoryPage() {
-    if (!/^\/categories\//.test(location.pathname)) return;
+    if (!/^\/categories\//.test(PATH)) return;
     var box = document.querySelector("#products-content > .bg-secondary");
-    var here = location.pathname.split("/")[2];
+    var here = PATH.split("/")[2];
     var tiles = [].filter.call(document.querySelectorAll('a[href*="/categories/"]'), function (a) {
       return a.querySelector("h4") && a.getAttribute("href").indexOf("/categories/" + here) === -1;
     });
@@ -398,11 +451,12 @@
     if (!f) return;
     [].forEach.call(f.querySelectorAll("p"), function (p) {
       if (!p.textContent.trim() && p.previousElementSibling && p.previousElementSibling.tagName === "IMG")
-        p.textContent = "قطع غيار لـ 30 شركة سيارات، أصلي أو تجاري. نتحقق من القطعة برقم الهيكل (VIN).";
+        p.textContent = T("قطع غيار لـ 30 شركة سيارات، أصلي أو تجاري. نتحقق من القطعة برقم الهيكل (VIN).",
+          "Parts for 30 car makes, genuine or aftermarket. We check every part against your VIN.");
     });
     [].forEach.call(f.querySelectorAll("h3"), function (h) {
       var next = h.nextElementSibling;
-      if (h.textContent.trim() === "تابعنا" && !(next && next.querySelector("a"))) {
+      if (/^(تابعنا|Follow us)$/.test(h.textContent.trim()) && !(next && next.querySelector("a"))) {
         h.hidden = true;
         if (next) next.hidden = true;
       }
@@ -417,20 +471,22 @@
       tel.setAttribute("dir", "ltr");
     }
     if (tel && !f.querySelector(".as-foot-wa")) {
-      var wa = el("a", { href: "https://wa.me/" + WHATSAPP, class: "as-foot-wa", target: "_blank", rel: "noopener" }, "اطلب عبر واتساب");
+      var wa = el("a", { href: "https://wa.me/" + WHATSAPP, class: "as-foot-wa", target: "_blank", rel: "noopener" },
+        T("اطلب عبر واتساب", "Order on WhatsApp"));
       tel.parentElement.parentElement.appendChild(wa);
     }
     // the theme doesn't list custom pages, so the store policies get their own column
     var grid = f.querySelector(".theme-container > .grid");
     if (grid && !f.querySelector(".as-foot-pages")) {
       var ul = el("ul", { class: "mt-4 space-y-2" });
-      [["سياسة الاستبدال والإرجاع", 122800], ["الشروط والأحكام", 122801], ["سياسة الخصوصية", 122802]].forEach(function (p) {
+      [[T("سياسة الاستبدال والإرجاع", "Returns and exchanges"), 122800], [T("الشروط والأحكام", "Terms and conditions"), 122801],
+        [T("سياسة الخصوصية", "Privacy policy"), 122802]].forEach(function (p) {
         var li = el("li", {});
-        li.appendChild(el("a", { href: "/pages/" + p[1] }, p[0]));
+        li.appendChild(el("a", { href: PRE + "/pages/" + p[1] }, p[0]));
         ul.appendChild(li);
       });
       var col = el("div", { class: "as-foot-pages" });
-      col.appendChild(el("h3", {}, "سياسات المتجر"));
+      col.appendChild(el("h3", {}, T("سياسات المتجر", "Store policies")));
       col.appendChild(ul);
       grid.appendChild(col);
     }
@@ -439,7 +495,7 @@
   // ---------- policy pages ----------
   // The page editor saves plain lines; a short line with no bullet and no full stop is a section heading.
   function tidyPolicyPage() {
-    if (location.pathname.indexOf("/pages/") !== 0) return;
+    if (PATH.indexOf("/pages/") !== 0) return;
     [].forEach.call(document.querySelectorAll(".prose > p"), function (p) {
       var t = p.textContent.trim();
       if (t && t.length < 40 && t.charAt(0) !== "•" && !/[.:،]$/.test(t)) p.classList.add("as-policy-h");
@@ -451,7 +507,8 @@
   function prefillWhatsApp(V) {
     var car = getCar();
     var label = car ? carLabel(car, V) : "";
-    var text = "السلام عليكم، أبحث عن قطعة" + (label ? " لسيارتي " + label : " لسيارتي") + ". رقم الهيكل (VIN): ";
+    var text = T("السلام عليكم، أبحث عن قطعة" + (label ? " لسيارتي " + label : " لسيارتي") + ". رقم الهيكل (VIN): ",
+      "Hello, I'm looking for a part for my car" + (label ? " " + label : "") + ". VIN: ");
     [].forEach.call(document.querySelectorAll('a[href*="wa.me/"]'), function (a) {
       if (a.href.indexOf("text=") === -1) a.href = wa(text);
     });
@@ -474,20 +531,23 @@
   // offer to look the part up on WhatsApp with the query and the saved car already written.
   function emptySearch(V) {
     var q = new URLSearchParams(location.search).get("q");
-    if (!q || location.pathname !== "/products") return;
+    if (!q || PATH !== "/products") return;
     var h = [].filter.call(document.querySelectorAll("h3"), function (x) {
-      return x.textContent.trim() === "لم يتم العثور على نتائج";
+      return /^(لم يتم العثور على نتائج|No results found)$/.test(x.textContent.trim());
     })[0];
     if (!h || document.querySelector(".as-nofind")) return;
     var car = getCar();
     var label = car && V ? carLabel(car, V) : "";
     var isNumber = /\d{3}/.test(q) && /^[A-Za-z0-9\- ]+$/.test(q);
-    var text = "السلام عليكم، أبحث عن " + (isNumber ? "القطعة رقم " : "") + q.trim() +
-      (label ? " لسيارتي " + label : "") + ". رقم الهيكل (VIN): ";
+    var text = T("السلام عليكم، أبحث عن " + (isNumber ? "القطعة رقم " : "") + q.trim() +
+        (label ? " لسيارتي " + label : "") + ". رقم الهيكل (VIN): ",
+      "Hello, I'm looking for " + (isNumber ? "part number " : "") + q.trim() +
+        (label ? " for my car " + label : "") + ". VIN: ");
     var box = el("div", { class: "as-nofind" },
-      "<p>" + (isNumber ? "ما ظهر رقم القطعة في البحث؟" : "ما لقيت القطعة؟") +
-      " أرسل طلبك عبر واتساب مع رقم الهيكل (VIN)، ونتحقق منها ونوفرها لك.</p>");
-    box.appendChild(el("a", { href: wa(text), class: "as-btn", target: "_blank", rel: "noopener" }, "اطلب عبر واتساب"));
+      "<p>" + (isNumber ? T("ما ظهر رقم القطعة في البحث؟", "Part number not showing up?") : T("ما لقيت القطعة؟", "Can't find the part?")) +
+      T(" أرسل طلبك عبر واتساب مع رقم الهيكل (VIN)، ونتحقق منها ونوفرها لك.",
+        " Send your request on WhatsApp with your VIN, and we'll check the part and get it for you.") + "</p>");
+    box.appendChild(el("a", { href: wa(text), class: "as-btn", target: "_blank", rel: "noopener" }, T("اطلب عبر واتساب", "Order on WhatsApp")));
     h.parentElement.appendChild(box);
   }
 
