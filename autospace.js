@@ -514,6 +514,19 @@
     });
   }
 
+  // ---------- English links ----------
+  // Menu items saved as full addresses (https://autospace.sa/categories/...) drop the /en prefix,
+  // so an English visitor lands on the Arabic page. Keep them in English.
+  function localizeLinks() {
+    if (!EN) return;
+    [].forEach.call(document.querySelectorAll('a[href^="https://autospace.sa/"], a[href^="http://autospace.sa/"]'), function (a) {
+      var u = new URL(a.href);
+      if (/^\/en(\/|$)/.test(u.pathname)) return;
+      u.pathname = "/en" + u.pathname;
+      a.href = u.toString();
+    });
+  }
+
   // ---------- search results ----------
   // The theme's live search prints "From 96.00" in English on the Arabic store.
   function arabicSearchPrices() {
@@ -554,6 +567,7 @@
   // ---------- boot ----------
   function boot() {
     arabicSearchPrices();
+    localizeLinks();
     loadCss();
     sharpLogo();
     tidyCategoryPage();
