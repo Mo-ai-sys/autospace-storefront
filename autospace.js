@@ -23,9 +23,11 @@
   // ---------- language ----------
   // Zid serves English under /en with the same theme. PATH is the path without that prefix, so page
   // checks work in both languages; PRE goes in front of every link we build.
-  var EN = /^\/en(\/|$)/.test(location.pathname) || (document.documentElement.lang || "").indexOf("en") === 0;
+  // Zid also uses locale prefixes (/ar-sa, /en-sa) once a visitor has switched language.
+  var LOCALE = /^\/(ar|en)(-[a-z]{2})?(?=\/|$)/;
+  var EN = /^\/en(-[a-z]{2})?(\/|$)/.test(location.pathname) || (document.documentElement.lang || "").indexOf("en") === 0;
   var PRE = EN ? "/en" : "";
-  var PATH = EN ? (location.pathname.replace(/^\/en/, "") || "/") : location.pathname;
+  var PATH = location.pathname.replace(LOCALE, "") || "/";
   function T(ar, en) { return EN ? en : ar; }
   function nm(o) { return EN ? (o.en || o.ar) : o.ar; }          // make or model name in the page language
 
@@ -454,7 +456,9 @@
   function sharpLogo() {
     var icon = el("link", { rel: "icon", type: "image/svg+xml", href: asset("logo/autospace-symbol.svg") });
     document.head.appendChild(icon);
-    var head = document.querySelector('header a[href="/"] img, header a[href="/en/"] img, header a[href="/en"] img');
+    var head = [].filter.call(document.querySelectorAll("header a[href] img"), function (img) {
+      return (img.parentElement.closest("a").getAttribute("href").replace(LOCALE, "") || "/") === "/";   // the home link
+    })[0];
     if (!head) return;
     var png = head.getAttribute("src");
     [].forEach.call(document.querySelectorAll("img"), function (img) {
