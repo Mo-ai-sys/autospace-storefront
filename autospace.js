@@ -393,7 +393,7 @@
     function onChange() {
       if (queued || !document.querySelector(CARD)) return;
       queued = true;
-      requestAnimationFrame(function () {
+      setTimeout(function () {                                   // batches bursts; still runs in background tabs
         queued = false;
         [].forEach.call(document.querySelectorAll(CARD), function (btn) {
           if (btn.hasAttribute(key)) return;
@@ -404,7 +404,7 @@
           btn.setAttribute(key, "");
           fn(btn.getAttribute("data-product-id"), card, title);
         });
-      });
+      }, 50);
     }
     new MutationObserver(onChange).observe(document.body, { childList: true, subtree: true });
     onChange();
