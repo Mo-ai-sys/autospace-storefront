@@ -457,7 +457,8 @@
     var icon = el("link", { rel: "icon", type: "image/svg+xml", href: asset("logo/autospace-symbol.svg") });
     document.head.appendChild(icon);
     var head = [].filter.call(document.querySelectorAll("header a[href] img"), function (img) {
-      return (img.parentElement.closest("a").getAttribute("href").replace(LOCALE, "") || "/") === "/";   // the home link
+      var a = img.closest("a");                                  // the home link, in any language
+      return a.host === location.host && (a.pathname.replace(LOCALE, "") || "/") === "/";
     })[0];
     if (!head) return;
     var png = head.getAttribute("src");
