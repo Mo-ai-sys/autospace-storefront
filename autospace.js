@@ -609,7 +609,28 @@
   function carSearchUrl(q, V) {
     var hit = q && carInQuery(q, V);
     if (!hit) return null;
-    return PRE + "/categories/" + hit.md.id + (hit.part ? "?q=" + encodeURIComponent(hit.part) : "");
+    // page_size=100: every match on one page, so sortSearchCards() can put the closest matches first
+    return PRE + "/categories/" + hit.md.id + (hit.part ? "?q=" + encodeURIComponent(hit.part) + "&page_size=100" : "");
+  }
+  // Zid lists search matches in catalogue order ("كلبسات فحمات" before "طقم فحمات فرامل"). Put names that
+  // hold every searched word first, then the parts with the most listings (the common part, not an
+  // accessory of it), keeping Zid's order otherwise.
+  function sortSearchCards(q) {
+    var want = spaced(q).trim().split(" ");
+    var grid = document.querySelector("#products-content [data-grid-root]");
+    if (!grid || grid.hasAttribute("data-as-sorted")) return;
+    var items = [].slice.call(grid.children).map(function (item, i) {
+      var h = item.querySelector("h3, h2");
+      var name = h ? spaced(h.textContent) : "";
+      return { item: item, i: i, name: name, all: want.every(function (w) { return name.indexOf(" " + w + " ") > -1; }) };
+    });
+    var count = {};
+    items.forEach(function (x) { count[x.name] = (count[x.name] || 0) + 1; });
+    items.sort(function (a, b) {
+      return (b.all - a.all) || (count[b.name] - count[a.name]) || (a.i - b.i);
+    });
+    grid.setAttribute("data-as-sorted", "");
+    items.forEach(function (x) { grid.appendChild(x.item); });
   }
   function carSearch(V) {
     // results page reached some other way (live search Enter, shared link): redirect once loaded
@@ -634,6 +655,7 @@
       bar.appendChild(el("a", { href: PRE + "/categories/" + md.id }, T("كل قطع ", "All parts for ") + esc(modelShort(md))));
       var head = document.querySelector("main h1");
       if (head) head.parentNode.insertBefore(bar, head.nextSibling);
+      sortSearchCards(q);
     }
     return false;
   }
