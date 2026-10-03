@@ -4,6 +4,8 @@
  *   2. Car chip in the header: the saved car, one tap back to its parts.
  *   3. Product pages: "fits your car" check against the fitment table in the description,
  *      and a WhatsApp link that carries the part number and the car.
+ *   4. Product cards: "fits your car" badge for the saved car, and the part number.
+ *   5. Search: "part + car" goes to the car's page filtered by the part.
  * Brand rules: orange = action, green = verified fit only, no emoji, no long dashes.
  */
 (function () {
@@ -384,35 +386,66 @@
   // data/fit/<model id>.json (mo-auto/tools/build_fit_index.py) maps product id -> year spans for
   // that model; each card says "fits your car" (green) or "does not fit your car" (neutral).
   var CARD = "[data-wishlist-btn][data-product-id]";
-  function cardBadges() {
-    var car = getCar();
-    if (!car || !car.md) return;
-    // the theme renders product cards after load, and again on paging: watch the page, fetch the
-    // model's index when the first card shows up, then mark every new card
+  // The theme renders product cards after load, and again on paging. Call fn(id, card, title) once
+  // per card as cards appear; `key` marks the cards fn has already seen.
+  function watchCards(key, fn) {
     var queued = false;
     function onChange() {
       if (queued || !document.querySelector(CARD)) return;
       queued = true;
-      requestAnimationFrame(function () { queued = false; run(); });
-    }
-    function run() {
-      fitIndex(car.md).then(function (fit) { if (fit) mark(fit); });
+      requestAnimationFrame(function () {
+        queued = false;
+        [].forEach.call(document.querySelectorAll(CARD), function (btn) {
+          if (btn.hasAttribute(key)) return;
+          var card = btn;
+          while (card.parentElement && !card.querySelector("h3, h2")) card = card.parentElement;
+          var title = card && card.querySelector("h3, h2");
+          if (!title) return;
+          btn.setAttribute(key, "");
+          fn(btn.getAttribute("data-product-id"), card, title);
+        });
+      });
     }
     new MutationObserver(onChange).observe(document.body, { childList: true, subtree: true });
     onChange();
+  }
 
-    function mark(fit) {
-      [].forEach.call(document.querySelectorAll(CARD), function (btn) {
-        var card = btn;
-        while (card.parentElement && !card.querySelector('a[href*="/products/"] h3, a[href*="/products/"] h2, h3, h2')) card = card.parentElement;
-        if (!card || card.querySelector(".as-card-fit")) return;
-        var fits = fitsCar(fit, btn.getAttribute("data-product-id"), car);
+  function cardBadges() {
+    var car = getCar();
+    if (!car || !car.md) return;
+    watchCards("data-as-fit", function (id, card, title) {
+      fitIndex(car.md).then(function (fit) {
+        if (!fit) return;
+        var fits = fitsCar(fit, id, car);
         var tag = el("span", { class: "as-card-fit" + (fits ? " is-yes" : "") },
           fits ? T("يناسب سيارتك", "Fits your car") : T("لا يناسب سيارتك", "Doesn't fit your car"));
-        var title = card.querySelector("h3, h2");
         title.parentNode.insertBefore(tag, title);
       });
+    });
+  }
+
+  // ---------- 5. product cards: part number ----------
+  // data/sku/<first 2 chars of id>.json (mo-auto/tools/build_sku_index.py): id[:12] -> part number
+  var skuCache = {};
+  function skuShard(id) {
+    var p = id.slice(0, 2);
+    if (!skuCache[p]) {
+      skuCache[p] = fetch(asset("data/sku/" + p + ".json"))
+        .then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; });
     }
+    return skuCache[p];
+  }
+  function cardSkus() {
+    watchCards("data-as-sku", function (id, card, title) {
+      if (!id) return;
+      skuShard(id).then(function (map) {
+        var sku = map[id.slice(0, 12)];
+        if (!sku || card.querySelector(".as-card-sku")) return;
+        var line = el("p", { class: "as-card-sku" }, T("رقم القطعة ", "Part no. "));
+        line.appendChild(el("bdi", { dir: "ltr" }, esc(sku)));
+        title.parentNode.insertBefore(line, title.nextSibling);
+      });
+    });
   }
 
   // ---------- logo ----------
@@ -540,6 +573,71 @@
     }).observe(box, { childList: true, subtree: true });
   }
 
+  // Zid's search matches the whole phrase, so "فحمات كامري" (part + car) finds nothing. When the query
+  // names a model, search for the rest inside that model's category: /categories/<model>?q=<part>.
+  function spaced(s) {                                           // norm() that keeps word breaks
+    return " " + String(s || "").replace(/[ً-ْـ]/g, "").replace(/[أإآ]/g, "ا").replace(/ى/g, "ي")
+      .replace(/ة/g, "ه").toLowerCase().replace(/[^؀-ۿa-z0-9]+/g, " ").trim() + " ";
+  }
+  function carInQuery(q, V) {
+    var text = spaced(q), best = null;
+    V.makes.forEach(function (mk) {
+      mk.models.forEach(function (md) {
+        var en = md.en.indexOf(mk.en + " ") === 0 ? md.en.slice(mk.en.length + 1) : md.en;
+        (md.short || []).concat([md.ar, md.en, en]).forEach(function (alias) {
+          var a = spaced(alias);
+          if (a.length < 5 || text.indexOf(a) === -1) return;    // 3+ letters, whole words only
+          // longest alias wins; on a tie prefer the model whose make is also named
+          var score = a.length * 10 + (text.indexOf(spaced(mk.ar)) > -1 || text.indexOf(spaced(mk.en)) > -1 ? 1 : 0);
+          if (!best || score > best.score) best = { md: md, alias: a, score: score };
+        });
+      });
+    });
+    if (!best) return null;
+    // drop the model, make and year words from the customer's own words (not the normalised copy,
+    // which Zid's search may not match: "شمعه" vs "شمعة")
+    var words = String(q).trim().split(/\s+/), keys = words.map(function (w) { return spaced(w).trim(); });
+    [best.alias, spaced(best.md.make.ar), spaced(best.md.make.en)].forEach(function (a) {
+      var t = a.trim().split(" ");
+      for (var i = 0; i + t.length <= keys.length; i++) {
+        if (t.every(function (x, j) { return keys[i + j] === x; })) { keys.splice(i, t.length); words.splice(i, t.length); return; }
+      }
+    });
+    var part = words.filter(function (w, i) { return keys[i] && !/^(19|20)\d\d$/.test(keys[i]); }).join(" ");
+    return { md: best.md, part: part };
+  }
+  function carSearchUrl(q, V) {
+    var hit = q && carInQuery(q, V);
+    if (!hit) return null;
+    return PRE + "/categories/" + hit.md.id + (hit.part ? "?q=" + encodeURIComponent(hit.part) : "");
+  }
+  function carSearch(V) {
+    // results page reached some other way (live search Enter, shared link): redirect once loaded
+    var q = new URLSearchParams(location.search).get("q");
+    if (PATH === "/products" && q) {
+      var url = carSearchUrl(q, V);
+      if (url) { location.replace(url); return true; }
+    }
+    // search box submit: go straight to the model page
+    document.addEventListener("submit", function (e) {
+      var input = e.target && e.target.querySelector && e.target.querySelector('input[name="q"]');
+      var url = input && carSearchUrl(input.value, V);
+      if (!url) return;
+      e.preventDefault();
+      location.href = url;
+    }, true);
+    // on the model page, say what the list is filtered by
+    var m = PATH.match(/^\/categories\/(\d+)/), md = m && V.modelById[m[1]];
+    if (md && q && !document.querySelector(".as-searchbar")) {
+      var bar = el("div", { class: "as-searchbar" },
+        "<p>" + T("نتائج «" + esc(q) + "» لسيارة " + esc(nm(md)), "Results for “" + esc(q) + "” on the " + esc(nm(md))) + "</p>");
+      bar.appendChild(el("a", { href: PRE + "/categories/" + md.id }, T("كل قطع ", "All parts for ") + esc(modelShort(md))));
+      var head = document.querySelector("main h1");
+      if (head) head.parentNode.insertBefore(bar, head.nextSibling);
+    }
+    return false;
+  }
+
   // Zid's search matches names only, not part numbers. When a search finds nothing,
   // offer to look the part up on WhatsApp with the query and the saved car already written.
   function emptySearch(V) {
@@ -573,7 +671,9 @@
     tidyCategoryPage();
     tidyFooter();
     tidyPolicyPage();
+    cardSkus();
     vehicles().then(function (V) {
+      if (carSearch(V)) return;                                  // leaving for the model page
       chipV = V;
       renderChip();
       buildPicker(V);
