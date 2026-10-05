@@ -228,3 +228,7 @@ div:has(> .as-nofind) > a:not(.as-btn), div:has(> .as-nofind) > button {
 /* ---------- Saudi Business Center seal ---------- */
 /* the seal floats bottom-left; on product pages, keep it above the theme's sticky add-to-cart bar */
 body:has([data-sticky-cta-price]) iframe.sbc-seal-frame { bottom: 96px !important; }
+
+/* ---------- footer: no payment or shipping logos ---------- */
+/* owner's choice (2026-10-05); the VAT certificate and Saudi Business Center badges in the same row stay */
+footer a[href*="shipping-and-payment"] { display: none !important; }
