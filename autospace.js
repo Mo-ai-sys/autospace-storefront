@@ -450,6 +450,47 @@
     });
   }
 
+  // ---------- VAT ----------
+  // Prices include 15% VAT (registered 2026-10-01, 315057459900003). The theme shows neither the
+  // "includes VAT" note on product pages nor the VAT amount in the cart, so add both.
+  var VAT_RATE = 0.15;
+  function money(n) { return n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+  function vatNotes() {
+    var price = document.querySelector("main [data-product-price]");
+    if (price && !document.querySelector(".as-vat-note")) {
+      var box = price.parentElement.parentElement;
+      box.parentNode.insertBefore(el("p", { class: "as-vat-note" },
+        T("السعر شامل ضريبة القيمة المضافة", "Price includes VAT")), box.nextSibling);
+    }
+    if (!/^\/cart/.test(PATH)) return;
+    // cart: under "Total", the VAT included in it; the theme re-renders the summary on quantity changes
+    function update() {
+      var label = [].filter.call(document.querySelectorAll("main span"), function (s) {
+        return s.children.length === 0 && /^(المجموع|Total)$/.test(s.textContent.trim());
+      })[0];
+      if (!label) return;
+      var row = label.parentElement;
+      var total = parseFloat((row.lastElementChild.textContent.match(/[\d,]+(\.\d+)?/) || ["0"])[0].replace(/,/g, ""));
+      var vat = total - total / (1 + VAT_RATE);
+      var line = row.parentElement.querySelector(".as-vat-row");
+      if (!line) {
+        line = el("div", { class: "as-vat-row flex items-center justify-between gap-2" });
+        line.appendChild(el("span", { class: "text-foreground text-sm" }, T("شامل ضريبة القيمة المضافة (15%)", "Includes VAT (15%)")));
+        line.appendChild(el("span", { class: "text-foreground text-sm shrink-0 text-end", dir: "ltr" }));
+      }
+      if (row.nextSibling !== line) row.parentNode.insertBefore(line, row.nextSibling);
+      var text = money(vat);
+      if (line.lastChild.textContent !== text) line.lastChild.textContent = text;
+    }
+    var queued = false;
+    new MutationObserver(function () {
+      if (queued) return;
+      queued = true;
+      setTimeout(function () { queued = false; update(); }, 50);
+    }).observe(document.body, { childList: true, subtree: true, characterData: true });
+    update();
+  }
+
   // ---------- logo ----------
   // Zid serves the uploaded logo as a 200px PNG, soft on high-density screens. Swap in the vector lockup
   // wherever that same image appears (header, menu drawer, footer).
@@ -699,6 +740,7 @@
     tidyFooter();
     tidyPolicyPage();
     cardSkus();
+    vatNotes();
     vehicles().then(function (V) {
       if (carSearch(V)) return;                                  // leaving for the model page
       chipV = V;

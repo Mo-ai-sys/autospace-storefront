@@ -221,3 +221,6 @@ footer img[src*="autospace-lockup"] { width: 168px !important; height: auto !imp
 /* one primary action: the theme's "show all products" steps back to an outlined button */
 div:has(> .as-nofind) > a:not(.as-btn), div:has(> .as-nofind) > button {
   background: #fff !important; color: var(--as-black) !important; border: 1.5px solid var(--as-black) !important; }
+
+/* ---------- VAT: prices include 15% ---------- */
+.as-vat-note { margin: 4px 0 0; font-size: 13px; line-height: 1.5; color: var(--as-ink-2); }
