@@ -562,8 +562,10 @@
     var grid = f.querySelector(".theme-container > .grid");
     if (grid && !f.querySelector(".as-foot-pages")) {
       var ul = el("ul", { class: "mt-4 space-y-2" });
-      [[T("سياسة الاستبدال والإرجاع", "Returns and exchanges"), 122800], [T("الشروط والأحكام", "Terms and conditions"), 122801],
-        [T("سياسة الخصوصية", "Privacy policy"), 122802]].forEach(function (p) {
+      // the Ministry of Commerce rates stores on these: returns, shipping, complaints, privacy, contact
+      [[T("سياسة الاستبدال والإرجاع", "Returns and exchanges"), 122800], [T("سياسة الشحن والتوصيل", "Shipping and delivery"), "shipping-policy"],
+        [T("الشروط والأحكام", "Terms and conditions"), 122801], [T("سياسة الخصوصية", "Privacy policy"), 122802],
+        [T("الشكاوى والمقترحات", "Complaints and suggestions"), "complaints-policy"], [T("تواصل معنا", "Contact us"), "contact-us"]].forEach(function (p) {
         var li = el("li", {});
         li.appendChild(el("a", { href: PRE + "/pages/" + p[1] }, p[0]));
         ul.appendChild(li);
@@ -579,9 +581,21 @@
   // The page editor saves plain lines; a short line with no bullet and no full stop is a section heading.
   function tidyPolicyPage() {
     if (PATH.indexOf("/pages/") !== 0) return;
+    // pasted text is saved as one paragraph with line breaks: one paragraph per line
+    [].forEach.call(document.querySelectorAll(".prose > p"), function (p) {
+      if (!p.querySelector("br")) return;
+      p.innerHTML.split(/<br\s*\/?>/i).forEach(function (part) {
+        if (!part.replace(/&nbsp;/g, "").trim()) return;
+        var q = el("p", {}, part.trim());
+        if (p.getAttribute("style")) q.setAttribute("style", p.getAttribute("style"));
+        p.parentNode.insertBefore(q, p);
+      });
+      p.remove();
+    });
     [].forEach.call(document.querySelectorAll(".prose > p"), function (p) {
       var t = p.textContent.trim();
-      if (t && t.length < 40 && t.charAt(0) !== "•" && !/[.:،]$/.test(t)) p.classList.add("as-policy-h");
+      if (t && t.length < 45 && t.charAt(0) !== "•" && !/[.:،]$/.test(t) && !/^(آخر تحديث|Last updated)/.test(t))
+        p.classList.add("as-policy-h");
     });
   }
 
