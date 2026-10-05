@@ -495,6 +495,18 @@
     update();
   }
 
+  // ---------- Saudi Business Center seal ----------
+  // "Verified store" badge with a QR to the e-commerce authentication certificate (no. 0000332269).
+  // The SBC asks for this snippet in <body>; Zid Growth has no body editor, so add it here.
+  function sbcSeal() {
+    if (document.querySelector(".sbc-verify-seal")) return;
+    document.body.appendChild(el("div", { class: "sbc-verify-seal", "data-token": "am5FalBuMVF6dmNodEpxdFNURUU2QT09",
+      "data-position": "bottom-left" }));
+    var s = el("script", { src: "https://eauthenticate.saudibusiness.gov.sa/EAuthSealApi/seal.js" });
+    s.async = true;
+    document.body.appendChild(s);
+  }
+
   // ---------- logo ----------
   // Zid serves the uploaded logo as a 200px PNG, soft on high-density screens. Swap in the vector lockup
   // wherever that same image appears (header, menu drawer, footer).
@@ -759,6 +771,7 @@
     tidyPolicyPage();
     cardSkus();
     vatNotes();
+    sbcSeal();
     vehicles().then(function (V) {
       if (carSearch(V)) return;                                  // leaving for the model page
       chipV = V;
