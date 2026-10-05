@@ -476,11 +476,15 @@
       if (!line) {
         line = el("div", { class: "as-vat-row flex items-center justify-between gap-2" });
         line.appendChild(el("span", { class: "text-foreground text-sm" }, T("شامل ضريبة القيمة المضافة (15%)", "Includes VAT (15%)")));
-        line.appendChild(el("span", { class: "text-foreground text-sm shrink-0 text-end", dir: "ltr" }));
+        line.appendChild(el("span"));
       }
       if (row.nextSibling !== line) row.parentNode.insertBefore(line, row.nextSibling);
-      var text = money(vat);
-      if (line.lastChild.textContent !== text) line.lastChild.textContent = text;
+      // copy the total's own markup (riyal symbol, alignment) with the VAT figure in place of the total
+      var amount = row.lastElementChild.cloneNode(true);
+      amount.classList.remove("font-semibold");
+      var walker = document.createTreeWalker(amount, NodeFilter.SHOW_TEXT), t;
+      while ((t = walker.nextNode())) t.nodeValue = t.nodeValue.replace(/[\d,]+(\.\d+)?/, money(vat));
+      if (line.lastChild.outerHTML !== amount.outerHTML) line.replaceChild(amount, line.lastChild);
     }
     var queued = false;
     new MutationObserver(function () {
