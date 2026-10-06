@@ -570,6 +570,19 @@
         T("اطلب عبر واتساب", "Order on WhatsApp"));
       tel.parentElement.parentElement.appendChild(wa);
     }
+    // bottom row: the VAT certificate and Saudi Business Center badges share a group with the VAT and CR
+    // numbers; give them their own group in the middle (copyright | badges | numbers)
+    var badges = [].filter.call(f.querySelectorAll('a'), function (a) {
+      var img = a.querySelector("img");
+      return img && /ضريبة القيمة المضافة|VAT|مركز الأعمال|Business Center/i.test(img.alt || "");
+    });
+    if (badges.length && !f.querySelector(".as-foot-badges")) {
+      var row = badges[0].parentElement, bar = row.parentElement;
+      var mid = el("div", { class: "as-foot-badges" });
+      badges.forEach(function (a) { mid.appendChild(a); });
+      bar.insertBefore(mid, row);
+      bar.classList.add("as-foot-bar");
+    }
     // the theme doesn't list custom pages, so the store policies get their own column
     var grid = f.querySelector(".theme-container > .grid");
     if (grid && !f.querySelector(".as-foot-pages")) {

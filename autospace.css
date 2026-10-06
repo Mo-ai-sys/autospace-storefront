@@ -232,3 +232,15 @@ body:has([data-sticky-cta-price]) iframe.sbc-seal-frame { bottom: 96px !importan
 /* ---------- footer: no payment or shipping logos ---------- */
 /* owner's choice (2026-10-05); the VAT certificate and Saudi Business Center badges in the same row stay */
 footer a[href*="shipping-and-payment"] { display: none !important; }
+
+/* footer bottom row: copyright | VAT and SBC badges (centred) | VAT and CR numbers */
+.as-foot-badges { display: flex; align-items: center; justify-content: center; gap: 16px; }
+@media (min-width: 1024px) {
+  .as-foot-bar { display: grid !important; grid-template-columns: 1fr auto 1fr; align-items: center; }
+  .as-foot-bar > :first-child { justify-self: start; }
+  .as-foot-bar > :last-child { justify-self: end; }
+  .as-foot-bar > * { margin: 0 !important; }
+}
+
+/* SBC seal: clip the frame to the pill so its white corners and shadow ring don't show */
+iframe.sbc-seal-frame { clip-path: inset(3px round 999px); background: transparent; color-scheme: normal; }
