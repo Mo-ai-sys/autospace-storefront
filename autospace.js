@@ -505,6 +505,14 @@
     var s = el("script", { src: "https://eauthenticate.saudibusiness.gov.sa/EAuthSealApi/seal.js" });
     s.async = true;
     document.body.appendChild(s);
+    // seal.js resizes its frame between the small pill and the open verification card; trim the pill's
+    // white corners and shadow only while it is the pill (class is-pill), never the open card
+    new MutationObserver(function () {
+      var f = document.querySelector("iframe.sbc-seal-frame");
+      if (!f) return;
+      var pill = parseInt(f.style.height, 10) <= 60;
+      if (f.classList.contains("is-pill") !== pill) f.classList.toggle("is-pill", pill);
+    }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["style"] });
   }
 
   // ---------- logo ----------

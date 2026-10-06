@@ -243,4 +243,5 @@ footer a[href*="shipping-and-payment"] { display: none !important; }
 }
 
 /* SBC seal: clip the frame to the pill so its white corners and shadow ring don't show */
-iframe.sbc-seal-frame { clip-path: inset(3px round 999px); background: transparent; color-scheme: normal; }
+iframe.sbc-seal-frame { background: transparent; color-scheme: normal; }
+iframe.sbc-seal-frame.is-pill { clip-path: inset(3px round 999px); }
