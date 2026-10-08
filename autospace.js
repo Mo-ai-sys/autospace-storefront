@@ -1,6 +1,6 @@
 /* AutoSpace storefront additions for the Zid Growth theme.
  * Loaded by a one-line loader in Zid's custom JS editor; served from jsDelivr.
- *   1. Car picker under the homepage hero (#as-car): make, model, year, and a VIN reader.
+ *   1. Car picker under the homepage hero (#as-car): make, model, year, and a VIN reader (off: VIN_READER).
  *   2. Car chip in the header: the saved car, one tap back to its parts.
  *   3. Product pages: "fits your car" check against the fitment table in the description,
  *      and a WhatsApp link that carries the part number and the car.
@@ -19,6 +19,7 @@
   var BASE = SRC.split("?")[0].replace(/[^/]+$/, "");
   function asset(path) { return BASE + path + (VERSION ? "?" + VERSION : ""); }
   var WHATSAPP = "966598929096";
+  var VIN_READER = false;          // owner, 2026-10-08: hide the VIN lookup for now; true brings it back
 
   // ---------- language ----------
   // Zid serves English under /en with the same theme. PATH is the path without that prefix, so page
@@ -149,6 +150,7 @@
           '<label class="as-field"><span>' + T("السنة", "Year") + '</span><select data-f="yr" disabled></select></label>' +
           '<button type="button" class="as-btn" data-go disabled>' + T("اعرض القطع", "Show parts") + "</button>" +
         "</div>" +
+        (!VIN_READER ? "" :
         '<form class="as-vin" novalidate>' +
           '<label for="as-vin-input">' + T("عندك رقم الهيكل (VIN)؟", "Have your VIN?") + "</label>" +
           '<div class="as-vin-row"><div class="as-plate"><input id="as-vin-input" maxlength="17" dir="ltr" autocomplete="off" ' +
@@ -156,7 +158,7 @@
             '<span class="as-vin-count" id="as-vin-count" dir="ltr">0/17</span></div>' +
           '<button type="submit" class="as-btn-ghost">' + T("اقرأ الرقم", "Read VIN") + "</button></div>" +
           '<p class="as-vin-out" role="status" aria-live="polite"></p>' +
-        "</form>" +
+        "</form>") +
       "</div>");
     // the picker is the hero's job: it sits inside the hero instead of a scroll-to button below it
     var heroBox = hero.querySelector(".theme-container") || hero;
@@ -210,6 +212,7 @@
     });
 
     // VIN reader
+    if (!VIN_READER) return;
     var form = sec.querySelector(".as-vin"), input = sec.querySelector("#as-vin-input"),
       out = sec.querySelector(".as-vin-out"), count = sec.querySelector(".as-vin-count");
     input.addEventListener("input", function () {
