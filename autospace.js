@@ -559,7 +559,7 @@
     if (!f) return;
     [].forEach.call(f.querySelectorAll("p"), function (p) {
       if (!p.textContent.trim() && p.previousElementSibling && p.previousElementSibling.tagName === "IMG")
-        p.textContent = T("قطع غيار لـ 30 شركة سيارات، أصلي أو تجاري. نتحقق من القطعة برقم الهيكل (VIN).",
+        p.textContent = T("قطع غيار لـ 30 شركة سيارات، أصلي أو بديل. نتحقق من القطعة برقم الهيكل (VIN).",
           "Parts for 30 car makes, genuine or aftermarket. We check every part against your VIN.");
     });
     [].forEach.call(f.querySelectorAll("h3"), function (h) {
