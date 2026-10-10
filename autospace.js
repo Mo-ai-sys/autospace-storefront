@@ -453,6 +453,31 @@
     });
   }
 
+  // ---------- wording: no "تجاري" for aftermarket (owner, 2026-10-10) ----------
+  // Zid keeps each variant's old option label ("بديل (تجاري)") and theme texts until they are edited;
+  // show the new wording on every page meanwhile. "السجل التجاري" (commercial registration) is untouched.
+  var WORDING = [[/بديل\s*\(تجاري\)/g, "بديل"], [/أصلي وتجاري/g, "أصلي وبديل"], [/أصلي أو تجاري/g, "أصلي أو بديل"]];
+  function fixWording(root) {
+    var walker = document.createTreeWalker(root || document.body, NodeFilter.SHOW_TEXT), t;
+    while ((t = walker.nextNode())) {
+      if (t.nodeValue.indexOf("تجاري") === -1) continue;
+      var v = t.nodeValue;
+      WORDING.forEach(function (w) { v = v.replace(w[0], w[1]); });
+      if (v !== t.nodeValue) t.nodeValue = v;
+    }
+  }
+  function wording() {
+    if (EN) return;
+    fixWording(document.body);
+    if (document.title.indexOf("تجاري") > -1) WORDING.forEach(function (w) { document.title = document.title.replace(w[0], w[1]); });
+    var queued = false;
+    new MutationObserver(function () {
+      if (queued) return;
+      queued = true;
+      setTimeout(function () { queued = false; fixWording(document.body); }, 60);
+    }).observe(document.body, { childList: true, subtree: true, characterData: true });
+  }
+
   // ---------- VAT ----------
   // Prices include 15% VAT (registered 2026-10-01, 315057459900003). The theme shows neither the
   // "includes VAT" note on product pages nor the VAT amount in the cart, so add both.
@@ -797,6 +822,7 @@
     tidyPolicyPage();
     cardSkus();
     vatNotes();
+    wording();
     sbcSeal();
     vehicles().then(function (V) {
       if (carSearch(V)) return;                                  // leaving for the model page
