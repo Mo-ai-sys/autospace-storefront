@@ -453,14 +453,16 @@
     });
   }
 
-  // ---------- wording: no "تجاري" for aftermarket (owner, 2026-10-10) ----------
-  // Zid keeps each variant's old option label ("بديل (تجاري)") and theme texts until they are edited;
-  // show the new wording on every page meanwhile. "السجل التجاري" (commercial registration) is untouched.
-  var WORDING = [[/بديل\s*\(تجاري\)/g, "بديل"], [/أصلي وتجاري/g, "أصلي وبديل"], [/أصلي أو تجاري/g, "أصلي أو بديل"]];
+  // ---------- wording: the two types are just "أصلي" and "بديل" (owner, 2026-10-10 / 10-11) ----------
+  // Zid keeps each variant's old option label ("بديل (تجاري)", "أصلي (وكالة)") and theme texts until they
+  // are edited; show the new wording on every page meanwhile. "السجل التجاري" (commercial registration) is untouched.
+  var WORDING = [[/بديل\s*\(تجاري\)/g, "بديل"], [/أصلي\s*\(وكالة\)/g, "أصلي"], [/أصلي وتجاري/g, "أصلي وبديل"],
+    [/أصلي أو تجاري/g, "أصلي أو بديل"]];
+  var OLD_WORDS = /تجاري|وكالة/;
   function fixWording(root) {
     var walker = document.createTreeWalker(root || document.body, NodeFilter.SHOW_TEXT), t;
     while ((t = walker.nextNode())) {
-      if (t.nodeValue.indexOf("تجاري") === -1) continue;
+      if (!OLD_WORDS.test(t.nodeValue)) continue;
       var v = t.nodeValue;
       WORDING.forEach(function (w) { v = v.replace(w[0], w[1]); });
       if (v !== t.nodeValue) t.nodeValue = v;
@@ -469,7 +471,7 @@
   function wording() {
     if (EN) return;
     fixWording(document.body);
-    if (document.title.indexOf("تجاري") > -1) WORDING.forEach(function (w) { document.title = document.title.replace(w[0], w[1]); });
+    if (OLD_WORDS.test(document.title)) WORDING.forEach(function (w) { document.title = document.title.replace(w[0], w[1]); });
     var queued = false;
     new MutationObserver(function () {
       if (queued) return;
