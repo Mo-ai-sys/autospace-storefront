@@ -94,7 +94,11 @@
 
   // ---------- saved car ----------
   function getCar() { return store.get("car", null); }
-  function setCar(car) { store.set("car", car); renderChip(); }
+  function setCar(car) {
+    store.set("car", car);
+    renderChip();
+    if (car) track("select_car", { model_id: car.md, year: car.yr || "" });
+  }
   function clearCar() {
     store.set("car", null);
     renderChip();
@@ -813,8 +817,35 @@
     h.parentElement.appendChild(box);
   }
 
+  // ---------- analytics ----------
+  // Microsoft Clarity (session recordings and heatmaps, project "AutoSpace", 2026-10-21). GA4 itself is
+  // loaded by Zid's Google Analytics app (G-K5XC068604), which sends the store's shopping events.
+  var CLARITY_ID = "z1ce81x9aq";
+  function loadClarity() {
+    if (window.clarity) return;
+    window.clarity = function () { (window.clarity.q = window.clarity.q || []).push(arguments); };
+    var s = el("script", { async: "", src: "https://www.clarity.ms/tag/" + CLARITY_ID });
+    document.head.appendChild(s);
+  }
+  // Events Zid doesn't send: most orders start on WhatsApp, and the car picker is the store's main path.
+  function track(name, params) {
+    try {
+      if (window.gtag) window.gtag("event", name, params || {});
+      if (window.clarity) window.clarity("event", name);
+    } catch (e) { /* analytics must never break the page */ }
+  }
+  function trackWhatsApp() {
+    document.addEventListener("click", function (e) {
+      var a = e.target.closest && e.target.closest('a[href*="wa.me/"], a[href*="api.whatsapp.com"]');
+      if (!a) return;
+      track("generate_lead", { method: "whatsapp", page_path: PATH });
+    }, true);
+  }
+
   // ---------- boot ----------
   function boot() {
+    loadClarity();
+    trackWhatsApp();
     arabicSearchPrices();
     localizeLinks();
     loadCss();
