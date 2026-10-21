@@ -836,7 +836,8 @@
   }
   function trackWhatsApp() {
     document.addEventListener("click", function (e) {
-      var a = e.target.closest && e.target.closest('a[href*="wa.me/"], a[href*="api.whatsapp.com"]');
+      // only the store's own number: Zid's "share on WhatsApp" button (api.whatsapp.com) isn't a lead
+      var a = e.target.closest && e.target.closest('a[href*="wa.me/' + WHATSAPP + '"]');
       if (!a) return;
       track("generate_lead", { method: "whatsapp", page_path: PATH });
     }, true);
