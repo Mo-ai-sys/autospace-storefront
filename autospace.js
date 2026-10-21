@@ -828,10 +828,13 @@
     document.head.appendChild(s);
   }
   // Events Zid doesn't send: most orders start on WhatsApp, and the car picker is the store's main path.
+  // Meta pixel 1129471099525009 is loaded by Zid's Meta pixel app; a WhatsApp click is Meta's "Lead".
+  var META_EVENTS = { generate_lead: ["track", "Lead"], select_car: ["trackCustom", "SelectCar"] };
   function track(name, params) {
     try {
       if (window.gtag) window.gtag("event", name, params || {});
       if (window.clarity) window.clarity("event", name);
+      if (window.fbq && META_EVENTS[name]) window.fbq(META_EVENTS[name][0], META_EVENTS[name][1], params || {});
     } catch (e) { /* analytics must never break the page */ }
   }
   function trackWhatsApp() {
