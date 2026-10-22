@@ -1,7 +1,6 @@
 /* AutoSpace storefront additions. Tokens from brand/kit/colors/tokens.css.
    Design read: a parts store with one job, find the right part for this car, checked by VIN.
    Signature: the VIN plate in the hero. Orange is for actions only, green only for a verified fit. */
-@import url("https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;500;600;700&display=swap");
 
 :root {
   --as-orange: #F15A30;
@@ -15,14 +14,14 @@
   --as-line-dark: #34393C;
   --as-radius-box: 16px;
   --as-radius-btn: 10px;
-  --as-font: "Readex Pro", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --as-font: "IBM Plex Sans Arabic", system-ui, sans-serif;   /* brand font; the theme already loads it (Readex Pro dropped 2026-10-22: 53 KB, arrived last) */
 }
 
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }
 }
 
-/* ---------- type: Readex Pro, no light weights ---------- */
+/* ---------- type: IBM Plex Sans Arabic, no light weights ---------- */
 html, body, button, input, select, textarea, h1, h2, h3, h4, h5, h6, p, a, span, li, label {
   font-family: var(--as-font) !important;
 }
