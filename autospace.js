@@ -846,10 +846,47 @@
     }, true);
   }
 
+  // ---------- tap feedback ----------
+  // The quick view ("اختر الخيارات") and the next product page take 1-3 s on phones with no sign anything
+  // happened, so visitors tapped again (Clarity: 40% of visits had dead taps, 2026-10-22).
+  function busy(node, done) {
+    node.classList.add("as-busy");
+    var start = Date.now();
+    var timer = setInterval(function () {
+      if ((done && done()) || Date.now() - start > 8000) {
+        clearInterval(timer);
+        node.classList.remove("as-busy");
+      }
+    }, 150);
+  }
+  function tapFeedback() {
+    document.addEventListener("click", function (e) {
+      if (!e.target.closest) return;
+      var quick = e.target.closest("[data-open-quick-view]");
+      if (quick) {
+        busy(quick, function () { return document.querySelector("dialog[open]"); });
+        return;
+      }
+      var page = e.target.closest('a[data-slot^="pagination"][href]');
+      if (page && page.getAttribute("href")) {
+        busy(page);
+        var grid = document.getElementById("products-content");
+        if (grid) grid.classList.add("as-loading");
+      }
+    }, true);
+    // coming back with the browser's back button can restore the dimmed page from cache
+    window.addEventListener("pageshow", function () {
+      var grid = document.getElementById("products-content");
+      if (grid) grid.classList.remove("as-loading");
+      document.querySelectorAll(".as-busy").forEach(function (n) { n.classList.remove("as-busy"); });
+    });
+  }
+
   // ---------- boot ----------
   function boot() {
     loadClarity();
     trackWhatsApp();
+    tapFeedback();
     arabicSearchPrices();
     localizeLinks();
     loadCss();

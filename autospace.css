@@ -245,3 +245,16 @@ footer a[href*="shipping-and-payment"] { display: none !important; }
 /* SBC seal: clip the frame to the pill so its white corners and shadow ring don't show */
 iframe.sbc-seal-frame { background: transparent; color-scheme: normal; }
 iframe.sbc-seal-frame.is-pill { clip-path: inset(3px round 999px); }
+
+/* tap feedback (2026-10-22): Clarity showed 40% of visits with dead taps on "اختر الخيارات" and the page
+   arrows, because the quick view and the next page take 1-3 s on phones with nothing to show for it */
+.as-busy { position: relative; pointer-events: none; color: transparent !important; }
+.as-busy::after {
+  content: ""; position: absolute; top: 50%; left: 50%; width: 18px; height: 18px; margin: -9px 0 0 -9px;
+  border: 2px solid var(--as-black); border-right-color: transparent; border-radius: 50%;
+  animation: as-spin .7s linear infinite;
+}
+.as-busy svg { visibility: hidden; }
+#products-content.as-loading { opacity: .45; pointer-events: none; transition: opacity .15s; }
+@keyframes as-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .as-busy::after { animation-duration: 2s; } }
