@@ -864,7 +864,12 @@
       if (!e.target.closest) return;
       var quick = e.target.closest("[data-open-quick-view]");
       if (quick) {
-        busy(quick, function () { return document.querySelector("dialog[open]"); });
+        // Zid keeps the quick-view dialog in the page; it is ready once it holds this product
+        var id = quick.getAttribute("data-product-id");
+        busy(quick, function () {
+          var modal = document.getElementById("product-quick-view-modal");
+          return !modal || !id || modal.querySelector('[data-product-id="' + id + '"]');
+        });
         return;
       }
       var page = e.target.closest('a[data-slot^="pagination"][href]');
