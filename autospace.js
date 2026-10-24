@@ -675,6 +675,15 @@
     var label = car ? carLabel(car, V) : "";
     var text = T("السلام عليكم، أبحث عن قطعة" + (label ? " لسيارتي " + label : " لسيارتي") + ". رقم الهيكل (VIN): ",
       "Hello, I'm looking for a part for my car" + (label ? " " + label : "") + ". VIN: ");
+    // Homepage call-to-action section saves its WhatsApp button with an empty link (reloads the page).
+    [].forEach.call(document.querySelectorAll(".section-call-to-action a"), function (a) {
+      var h = a.getAttribute("href");
+      if ((!h || h === "#") && /واتساب|whatsapp/i.test(a.textContent)) {
+        a.href = "https://wa.me/" + WHATSAPP;
+        a.target = "_blank";
+        a.rel = "noopener";
+      }
+    });
     [].forEach.call(document.querySelectorAll('a[href*="wa.me/"]'), function (a) {
       if (a.href.indexOf("text=") === -1) a.href = wa(text);
     });
