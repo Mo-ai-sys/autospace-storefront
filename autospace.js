@@ -902,8 +902,19 @@
     });
   }
 
+  // ---------- first images ----------
+  // The theme lazy-loads every card image, so the ones in the first screen wait for layout before
+  // they are even requested; that is the slow "largest paint" Clarity reports on category pages.
+  function eagerFirstImages() {
+    [].slice.call(document.querySelectorAll("#products-content img[loading=lazy]"), 0, 4).forEach(function (img) {
+      img.loading = "eager";
+      img.setAttribute("fetchpriority", "high");
+    });
+  }
+
   // ---------- boot ----------
   function boot() {
+    eagerFirstImages();
     loadClarity();
     trackWhatsApp();
     tapFeedback();
