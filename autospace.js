@@ -873,6 +873,12 @@
       if (!e.target.closest) return;
       var quick = e.target.closest("[data-open-quick-view]");
       if (quick) {
+        // a second tap while it loads makes the theme call showModal() on the open dialog (Clarity error)
+        if (quick.classList.contains("as-busy")) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          return;
+        }
         // Zid keeps the quick-view dialog in the page; it is ready once it holds this product
         var id = quick.getAttribute("data-product-id");
         busy(quick, function () {
