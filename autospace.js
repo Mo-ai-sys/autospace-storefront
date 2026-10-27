@@ -912,9 +912,53 @@
     });
   }
 
+  // ---------- search data ----------
+  // The theme prints a hidden site-name h1 above the hero's h1, so the homepage has two (SEO audit,
+  // 2026-10-27). Keep the visible one.
+  function singleH1() {
+    var all = document.querySelectorAll("h1");
+    if (all.length < 2) return;
+    [].forEach.call(all, function (h) {
+      if (!h.classList.contains("hidden")) return;
+      var p = el("p", { class: h.className }, esc(h.textContent));
+      h.parentNode.replaceChild(p, h);
+    });
+  }
+
+  // Google wants the return policy in the product data (Merchant listings warning). Same terms as
+  // the store's policy page: 7 days if not fitted, customer pays return shipping.
+  var RETURN_POLICY = {
+    "@type": "MerchantReturnPolicy",
+    applicableCountry: "SA",
+    returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+    merchantReturnDays: 7,
+    returnMethod: "https://schema.org/ReturnByMail",
+    returnFees: "https://schema.org/ReturnShippingFees"
+  };
+  function returnPolicySchema() {
+    [].forEach.call(document.querySelectorAll('script[type="application/ld+json"]'), function (s) {
+      var data;
+      try { data = JSON.parse(s.textContent); } catch (e) { return; }
+      var touched = false;
+      [].concat(data["@graph"] || data).forEach(function (item) {
+        var type = item["@type"];
+        if (type === "Product") {
+          [].concat(item.offers || []).forEach(function (o) { o.hasMerchantReturnPolicy = RETURN_POLICY; });
+          touched = true;
+        } else if (type === "Organization" || type === "OnlineStore") {
+          item.hasMerchantReturnPolicy = RETURN_POLICY;
+          touched = true;
+        }
+      });
+      if (touched) s.textContent = JSON.stringify(data);
+    });
+  }
+
   // ---------- boot ----------
   function boot() {
     eagerFirstImages();
+    singleH1();
+    returnPolicySchema();
     loadClarity();
     trackWhatsApp();
     tapFeedback();
