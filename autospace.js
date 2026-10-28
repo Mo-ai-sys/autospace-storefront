@@ -55,10 +55,23 @@
   function simple(s) { return String(s || "").toLowerCase().replace(/[^a-z0-9]/g, ""); }
   function wa(text) { return "https://wa.me/" + WHATSAPP + "?text=" + encodeURIComponent(text); }
 
+  // Resolves once autospace.css applies (or after 3 s). Parts added before that render unstyled and
+  // then snap into shape, which moved the whole homepage twice (CLS 0.73, 2026-10-29).
+  var cssReady;
   function loadCss() {
-    if (document.querySelector("link[data-autospace]")) return;
-    var l = el("link", { rel: "stylesheet", href: asset("autospace.css"), "data-autospace": "1" });
-    document.head.appendChild(l);
+    if (cssReady) return cssReady;
+    cssReady = new Promise(function (done) {
+      var l = document.querySelector("link[data-autospace]");
+      if (!l) {
+        l = el("link", { rel: "stylesheet", href: asset("autospace.css"), "data-autospace": "1" });
+        l.onload = l.onerror = function () { done(); };
+        document.head.appendChild(l);
+      } else {
+        done();
+      }
+      setTimeout(done, 3000);
+    });
+    return cssReady;
   }
 
   var vehiclesPromise;
@@ -873,8 +886,10 @@
       if (!e.target.closest) return;
       var quick = e.target.closest("[data-open-quick-view]");
       if (quick) {
-        // a second tap while it loads makes the theme call showModal() on the open dialog (Clarity error)
-        if (quick.classList.contains("as-busy")) {
+        // a tap while any quick view is loading or open makes the theme call showModal() on the open
+        // dialog (Clarity error, still seen after the same-button guard)
+        var open = document.getElementById("product-quick-view-modal");
+        if (document.querySelector("[data-open-quick-view].as-busy") || (open && open.open)) {
           e.preventDefault();
           e.stopImmediatePropagation();
           return;
@@ -964,16 +979,20 @@
     tapFeedback();
     arabicSearchPrices();
     localizeLinks();
-    loadCss();
+    var styled = loadCss();
     sharpLogo();
-    tidyCategoryPage();
-    tidyFooter();
-    tidyPolicyPage();
-    cardSkus();
-    vatNotes();
     wording();
-    sbcSeal();
-    vehicles().then(function (V) {
+    // everything below adds visible parts: wait for their styles so nothing renders bare and then jumps
+    styled.then(function () {
+      tidyCategoryPage();
+      tidyFooter();
+      tidyPolicyPage();
+      cardSkus();
+      vatNotes();
+      sbcSeal();
+    });
+    Promise.all([vehicles(), styled]).then(function (r) {
+      var V = r[0];
       if (carSearch(V)) return;                                  // leaving for the model page
       chipV = V;
       renderChip();
