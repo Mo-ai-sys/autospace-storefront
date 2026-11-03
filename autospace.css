@@ -66,7 +66,14 @@ h2, h3 { font-weight: 600; }
   height: 52px; width: 100%; border: 1px solid transparent; border-radius: var(--as-radius-btn);
   background: #fff; color: var(--as-black); font: inherit; font-size: 16px; font-weight: 500; padding: 0 12px;
 }
-.as-field select:disabled { background: #2A2E31; color: #8A9295; }
+.as-field select:disabled { background: #2A2E31; color: #8A9295; pointer-events: none; }   /* the tap reaches the label, which says what comes first */
+.as-field.as-need select { outline: 2px solid var(--as-orange); outline-offset: 2px; }
+@media (prefers-reduced-motion: no-preference) {
+  .as-field.as-need select { animation: as-need .4s ease 2; }
+  @keyframes as-need { 50% { outline-offset: 5px; } }
+}
+.as-hint { margin: 10px 0 0; font-size: 15px; font-weight: 500; color: #FF8A6B; }   /* same tone as the VIN error, 6.4:1 on the panel */
+.as-hint:empty { display: none; }
 .as-field select:focus-visible, .as-vin input:focus-visible, .as-btn:focus-visible, .as-btn-ghost:focus-visible,
 .as-chip:focus-visible, .as-chip-x:focus-visible, .as-clear:focus-visible { outline: 2px solid var(--as-orange); outline-offset: 2px; }
 

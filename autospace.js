@@ -165,8 +165,9 @@
           '<label class="as-field"><span>' + T("الشركة", "Make") + '</span><select data-f="mk"></select></label>' +
           '<label class="as-field"><span>' + T("الموديل", "Model") + '</span><select data-f="md" disabled></select></label>' +
           '<label class="as-field"><span>' + T("السنة", "Year") + '</span><select data-f="yr" disabled></select></label>' +
-          '<button type="button" class="as-btn" data-go disabled>' + T("اعرض القطع", "Show parts") + "</button>" +
+          '<button type="button" class="as-btn" data-go>' + T("اعرض القطع", "Show parts") + "</button>" +
         "</div>" +
+        '<p class="as-hint" role="status" aria-live="polite"></p>' +
         (!VIN_READER ? "" :
         '<form class="as-vin" novalidate>' +
           '<label for="as-vin-input">' + T("عندك رقم الهيكل (VIN)؟", "Have your VIN?") + "</label>" +
@@ -183,7 +184,25 @@
     document.documentElement.classList.add("as-has-picker");
 
     var sMk = sec.querySelector('[data-f="mk"]'), sMd = sec.querySelector('[data-f="md"]'),
-      sYr = sec.querySelector('[data-f="yr"]'), go = sec.querySelector("[data-go]");
+      sYr = sec.querySelector('[data-f="yr"]'), go = sec.querySelector("[data-go]"),
+      hint = sec.querySelector(".as-hint");
+
+    // taps on a greyed field or on the button too early used to do nothing (Clarity dead clicks):
+    // say which field comes first and point at it
+    function need(sel, msg) {
+      hint.textContent = msg;
+      var f = sel.closest(".as-field");
+      f.classList.remove("as-need"); void f.offsetWidth; f.classList.add("as-need");
+      sel.focus();
+    }
+    function needFirst() {
+      if (!sMk.value) need(sMk, T("اختر الشركة أولاً.", "Choose the make first."));
+      else if (!sMd.value) need(sMd, T("اختر الموديل أولاً.", "Choose the model first."));
+    }
+    sec.querySelector(".as-fields").addEventListener("click", function (e) {
+      var f = e.target.closest(".as-field"), s = f && f.querySelector("select");
+      if (s && s.disabled) needFirst();
+    });
 
     function fillMakes(sel) {
       sMk.innerHTML = '<option value="">' + T("اختر الشركة", "Choose make") + "</option>" + V.makes.map(function (mk) {
@@ -206,7 +225,7 @@
     }
     function sync(car) {
       fillMakes(car && car.mk); fillModels(car && car.mk, car && car.md); fillYears(car && car.md, car && car.yr);
-      go.disabled = !(car && car.md);
+      hint.textContent = "";
       clear.hidden = !(getCar());
     }
     var clear = sec.querySelector("[data-clear]");
@@ -215,15 +234,15 @@
 
     sMk.addEventListener("change", function () {
       var mk = Number(sMk.value) || null;
-      fillModels(mk, null); fillYears(null, null); go.disabled = true;
+      fillModels(mk, null); fillYears(null, null); hint.textContent = "";
     });
     sMd.addEventListener("change", function () {
       var md = Number(sMd.value) || null;
-      fillYears(md, null); go.disabled = !md;
+      fillYears(md, null); hint.textContent = "";
     });
     go.addEventListener("click", function () {
       var car = { mk: Number(sMk.value), md: Number(sMd.value), yr: Number(sYr.value) || null };
-      if (!car.md) return;
+      if (!car.md) { needFirst(); return; }
       setCar(car);
       location.href = PRE + "/categories/" + car.md;
     });
