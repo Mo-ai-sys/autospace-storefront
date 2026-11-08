@@ -264,3 +264,5 @@ iframe.sbc-seal-frame.is-pill { clip-path: inset(3px round 999px); }
 #products-content.as-loading { opacity: .45; pointer-events: none; transition: opacity .15s; }
 @keyframes as-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .as-busy::after { animation-duration: 2s; } }
+/* product page share row: keep WhatsApp and copy link, hide X and Facebook */
+a[href^="https://twitter.com/intent/"], a[href^="https://x.com/intent/"], a[href^="https://www.facebook.com/sharer/"] { display: none !important; }
