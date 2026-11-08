@@ -6,7 +6,8 @@
  *      and a WhatsApp link that carries the part number and the car.
  *   4. Product cards: "fits your car" badge for the saved car, and the part number.
  *   5. Search: "part + car" goes to the car's page filtered by the part.
- * Brand rules: orange = action, green = verified fit only, no emoji, no long dashes.
+ * Brand rules: orange = action; sea green = brand accent (owner, 2026-11-08), and a solid green pill with a
+ * check mark = verified fit; no emoji, no long dashes.
  */
 (function () {
   "use strict";
@@ -405,7 +406,7 @@
       var order = '<a href="' + ask + '" target="_blank" rel="noopener">' + T("اطلب عبر واتساب", "Order on WhatsApp") + "</a>";
       var box = el("div", { class: "as-fit as-fit--" + verdict, role: "status" });
       if (verdict === "yes") {
-        box.innerHTML = "<b>" + T("تناسب سيارتك", "Fits your car") + "</b> " + esc(label) + '<span class="as-fit-note">' +
+        box.innerHTML = '<b class="as-fit-yes">' + ICON.check + T("تناسب سيارتك", "Fits your car") + "</b> " + esc(label) + '<span class="as-fit-note">' +
           T("نتحقق من القطعة برقم الهيكل (VIN) مع طلبك.", "We check the part against your VIN with your order.") + "</span>";
       } else if (verdict === "no") {
         box.innerHTML = T("سيارتك " + esc(label) + " غير موجودة في جدول التوافق لهذه القطعة. ",
@@ -459,7 +460,7 @@
         if (!fit) return;
         var fits = fitsCar(fit, id, car);
         var tag = el("span", { class: "as-card-fit" + (fits ? " is-yes" : "") },
-          fits ? T("يناسب سيارتك", "Fits your car") : T("لا يناسب سيارتك", "Doesn't fit your car"));
+          fits ? ICON.check + T("يناسب سيارتك", "Fits your car") : T("لا يناسب سيارتك", "Doesn't fit your car"));
         title.parentNode.insertBefore(tag, title);
       });
     });
@@ -613,6 +614,138 @@
       return a.querySelector("h4") && a.getAttribute("href").indexOf("/categories/" + here) === -1;
     });
     if (box && tiles.length && !document.querySelector("#products-content [data-grid-root] > *")) box.hidden = true;
+  }
+
+  // A make or model page's heading is the car's name; Clarity showed shoppers tapping it to change car
+  // (2026-11-05), so it opens the car picker.
+  function carHeading(V) {
+    var id = PATH.split("/")[2];
+    if (!/^\/categories\//.test(PATH) || !(V.modelById[id] || V.makeById[id])) return;
+    var h1 = document.querySelector("h1");
+    if (!h1 || h1.querySelector(".as-h1-car")) return;
+    var a = el("a", { class: "as-h1-car", href: PRE + "/#as-car", "aria-label": T("تغيير السيارة: ", "Change car: ") + h1.textContent.trim() },
+      esc(h1.textContent.trim()) + ICON.chevron);
+    h1.textContent = "";
+    h1.appendChild(a);
+  }
+
+  // Page numbers read "1 2 3 ... 51"; the "..." was the most tapped dead spot on category pages
+  // (31% of dead taps, 2026-11-05). Tapping it opens a "go to page" field.
+  function pageJump() {
+    function lastPage() {
+      var max = 0, link = null;
+      [].forEach.call(document.querySelectorAll('a[data-slot="pagination-link"][href]'), function (a) {
+        var n = +((a.getAttribute("href").match(/[?&]page=(\d+)/) || [])[1] || 0);
+        if (n > max) { max = n; link = a; }
+      });
+      return { max: max, link: link };
+    }
+    function decorate() {
+      [].forEach.call(document.querySelectorAll('[data-slot="pagination-ellipsis"]:not([data-as-jump])'), function (s) {
+        s.setAttribute("data-as-jump", "");
+        s.removeAttribute("aria-hidden");
+        s.setAttribute("role", "button");
+        s.setAttribute("tabindex", "0");
+        s.setAttribute("aria-label", T("اذهب إلى صفحة", "Go to page"));
+      });
+    }
+    function open(dots) {
+      var nav = dots.closest("nav") || dots.parentNode;
+      var old = document.querySelector(".as-jump");
+      if (old) { old.remove(); return; }
+      var lp = lastPage();
+      if (!lp.link) return;
+      var form = el("form", { class: "as-jump" });
+      form.innerHTML = '<label for="as-jump-n">' + T("اذهب إلى الصفحة", "Go to page") + "</label>" +
+        '<input id="as-jump-n" type="number" inputmode="numeric" min="1" max="' + lp.max + '" required>' +
+        "<span>" + T("من ", "of ") + lp.max + "</span>" +
+        '<button type="submit" class="as-btn">' + T("اذهب", "Go") + "</button>";
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var n = Math.min(lp.max, Math.max(1, Math.round(+form.querySelector("input").value || 1)));
+        var grid = document.getElementById("products-content");
+        if (grid) grid.classList.add("as-loading");
+        location.href = lp.link.getAttribute("href").replace(/([?&]page=)\d+/, "$1" + n);
+      });
+      nav.parentNode.insertBefore(form, nav.nextSibling);
+      form.querySelector("input").focus();
+    }
+    document.addEventListener("click", function (e) {
+      var dots = e.target.closest && e.target.closest('[data-slot="pagination-ellipsis"]');
+      if (dots) open(dots);
+    });
+    document.addEventListener("keydown", function (e) {
+      var dots = e.target.closest && e.target.closest('[data-slot="pagination-ellipsis"]');
+      if (dots && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); open(dots); }
+      if (e.key === "Escape" && document.querySelector(".as-jump")) document.querySelector(".as-jump").remove();
+    });
+    var queued = false;
+    new MutationObserver(function () {
+      if (queued) return;
+      queued = true;
+      setTimeout(function () { queued = false; decorate(); }, 100);
+    }).observe(document.body, { childList: true, subtree: true });
+    decorate();
+  }
+
+  // ---------- product page: delivery and shipping next to "add to cart" (owner, 2026-11-08) ----------
+  // Zid shows the shipping cost only after the phone-code login, so state it before the shopper commits.
+  // data/noship.json: id[:12] of the products the free-shipping offer excludes (bumpers, fenders, front
+  // panels, trunk lids, rims and everything over 15 kg; built from free_shipping_excluded_ids.json).
+  var ICON = {
+    truck: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17.5" cy="17.5" r="1.8"/></svg>',
+    box: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9zM4 7.5l8 4.5 8-4.5M12 12v9"/></svg>',
+    chat: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/><path d="M9 10h.01M12 10h.01M15 10h.01"/></svg>',
+    check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    chevron: '<svg class="as-h1-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>'
+  };
+  function buyInfo() {
+    var meta = document.querySelector('meta[property="product:retailer_item_id"]');
+    var form = document.querySelector(".product-details-column form");
+    if (!meta || !form || document.querySelector(".as-buyinfo")) return;
+    var id = (meta.getAttribute("content") || "").slice(0, 12);
+    var title = ((document.querySelector("h1") || {}).textContent || "").trim();
+    fetch(asset("data/noship.json")).then(function (r) { return r.ok ? r.json() : []; })
+      .catch(function () { return []; }).then(function (bulkyIds) {
+        if (document.querySelector(".as-buyinfo")) return;
+        var bulky = bulkyIds.indexOf(id) >= 0;
+        var ask = wa(T("السلام عليكم، عندي سؤال عن القطعة: ", "Hello, I have a question about this part: ") + title +
+          T(". رقم الهيكل: ", ". VIN: ") + (store.get("vin", "") || ""));
+        var ship = bulky
+          ? T("قطعة كبيرة، لا يشملها الشحن المجاني. تكلفة شحنها حسب الوزن والمدينة.",
+              "Large part, not included in free shipping. Shipping depends on weight and city.")
+          : T("شحن مجاني للطلبات فوق 500 ر.س، وأقل من ذلك من " + SHIP_FROM + " ر.س حسب المدينة.",
+              "Free shipping on orders over 500 SAR, otherwise from " + SHIP_FROM + " SAR by city.");
+        var box = el("ul", { class: "as-buyinfo" });
+        box.innerHTML =
+          "<li>" + ICON.truck + "<span>" + T("يصل خلال 1 إلى 5 أيام عمل", "Arrives in 1 to 5 business days") + "</span></li>" +
+          "<li>" + ICON.box + "<span>" + ship + "</span></li>" +
+          "<li>" + ICON.chat + "<span>" + T("عندك سؤال عن القطعة؟ ", "A question about this part? ") +
+          '<a href="' + ask + '" target="_blank" rel="noopener">' + T("اطلب عبر واتساب", "Order on WhatsApp") + "</a></span></li>";
+        form.parentNode.insertBefore(box, form.nextSibling);
+      });
+  }
+  var SHIP_FROM = 21;                                            // Naqel Express up to 15 kg, the widest-reaching carrier
+
+  // ---------- speed: card images ----------
+  // Cards are about 200 px wide but the theme asks for 600 px images; 400 px is 42% lighter and still
+  // sharp at 2x. Only images not yet requested are changed, so nothing downloads twice.
+  function lighterCardImages() {
+    function shrink(img) {
+      if (img.complete && img.naturalWidth) return;
+      var s = img.getAttribute("src") || "";
+      if (s.indexOf("/cdn-cgi/image/w=600,") > -1) img.setAttribute("src", s.replace("/cdn-cgi/image/w=600,", "/cdn-cgi/image/w=400,"));
+    }
+    [].forEach.call(document.querySelectorAll("#products-content img, [data-grid-root] img"), shrink);
+    new MutationObserver(function (list) {
+      list.forEach(function (m) {
+        [].forEach.call(m.addedNodes, function (n) {
+          if (n.nodeType !== 1) return;
+          if (n.tagName === "IMG") shrink(n);
+          else [].forEach.call(n.querySelectorAll("img"), shrink);
+        });
+      });
+    }).observe(document.body, { childList: true, subtree: true });
   }
 
   // ---------- footer ----------
@@ -940,6 +1073,7 @@
   // The theme lazy-loads every card image, so the ones in the first screen wait for layout before
   // they are even requested; that is the slow "largest paint" Clarity reports on category pages.
   function eagerFirstImages() {
+    lighterCardImages();
     [].slice.call(document.querySelectorAll("#products-content img[loading=lazy]"), 0, 4).forEach(function (img) {
       img.loading = "eager";
       img.setAttribute("fetchpriority", "high");
@@ -1004,6 +1138,8 @@
     // everything below adds visible parts: wait for their styles so nothing renders bare and then jumps
     styled.then(function () {
       tidyCategoryPage();
+      pageJump();
+      buyInfo();
       tidyFooter();
       tidyPolicyPage();
       cardSkus();
@@ -1017,6 +1153,7 @@
       renderChip();
       buildPicker(V);
       productCheck(V);
+      carHeading(V);
       cardBadges();
       prefillWhatsApp(V);
       emptySearch(V);

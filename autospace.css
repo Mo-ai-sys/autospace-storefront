@@ -266,3 +266,56 @@ iframe.sbc-seal-frame.is-pill { clip-path: inset(3px round 999px); }
 @media (prefers-reduced-motion: reduce) { .as-busy::after { animation-duration: 2s; } }
 /* product page share row: keep WhatsApp and copy link, hide X and Facebook */
 a[href^="https://twitter.com/intent/"], a[href^="https://x.com/intent/"], a[href^="https://www.facebook.com/sharer/"] { display: none !important; }
+
+/* ---------- sea green accents (owner, 2026-11-08) ----------
+   Green is the brand accent now; orange stays the only action colour, and a verified fit is the one
+   solid green pill with a check mark. --as-green-ink is green text on white (5.0:1). */
+:root { --as-green-ink: #007A69; --as-green-tint: #E6F6F3; }
+header { border-bottom: 3px solid var(--as-green) !important; }
+.as-chip-bar { background: var(--as-green-tint); border-top-color: transparent; border-bottom-color: #C4E9E2; }
+.as-chip-wrap.is-set { border-color: var(--as-green-ink); }
+.as-chip-k { color: var(--as-green-ink); font-weight: 600; }
+.section-hero { border-bottom: 4px solid var(--as-green); }
+.as-head h2, .as-head h3 { border-inline-start: 4px solid var(--as-green); padding-inline-start: 10px; }
+footer { border-top: 4px solid var(--as-green) !important; }
+footer h3 { color: var(--as-green) !important; }                       /* 7.6:1 on the black footer */
+[data-slot="pagination-link"][data-active="true"] .underline { background: var(--as-green) !important; }
+[data-slot="pagination-link"][data-active="true"] { color: var(--as-green-ink) !important; font-weight: 700; }
+a:has(> h4):hover, a:has(> * > h4):hover { border-color: var(--as-green) !important; }
+.as-fit-table th { background: var(--as-green-tint); }
+.as-vat-note { color: var(--as-green-ink); }
+
+/* verified fit: the one solid green pill, with a check mark */
+.as-card-fit.is-yes, .as-fit-yes { display: inline-flex; align-items: center; gap: 4px; }
+.as-card-fit svg, .as-fit-yes svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.6;
+  stroke-linecap: round; stroke-linejoin: round; }
+.as-fit--yes { font-size: 16px; }
+.as-fit-yes svg { width: 20px; height: 20px; }
+
+/* category heading on a make or model page: opens the car picker */
+.as-h1-car { display: inline-flex; align-items: center; gap: 6px; color: inherit; text-decoration: none; min-height: 44px; }
+.as-h1-car:hover { color: var(--as-green-ink); }
+.as-h1-chev { width: 20px; height: 20px; fill: none; stroke: var(--as-green-ink); stroke-width: 2.4;
+  stroke-linecap: round; stroke-linejoin: round; }
+
+/* "..." in the page numbers: a button that opens "go to page" */
+[data-slot="pagination-ellipsis"][data-as-jump] { cursor: pointer; border-radius: var(--as-radius-btn);
+  border: 1px solid var(--as-line); color: var(--as-black) !important; }
+[data-slot="pagination-ellipsis"][data-as-jump]:hover { border-color: var(--as-green); background: var(--as-green-tint); }
+[data-slot="pagination-ellipsis"][data-as-jump]:focus-visible { outline: 2px solid var(--as-orange); outline-offset: 2px; }
+.as-jump { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 10px;
+  margin: 12px auto 0; padding: 12px 16px; max-width: 420px; border: 1px solid #C4E9E2;
+  border-radius: var(--as-radius-box); background: var(--as-green-tint); font-size: 15px; color: var(--as-black); }
+.as-jump label { font-weight: 600; }
+.as-jump input { width: 84px; height: 44px; border: 1px solid var(--as-gray); border-radius: var(--as-radius-btn);
+  background: #fff; font: inherit; font-size: 16px; text-align: center; }
+.as-jump input:focus { outline: 2px solid var(--as-orange); outline-offset: 1px; border-color: transparent; }
+.as-jump .as-btn { height: 44px; padding: 0 22px; }
+
+/* product page: delivery, shipping and a question line under "add to cart" */
+.as-buyinfo { list-style: none; margin: 4px 0 0; padding: 14px 16px; display: grid; gap: 10px;
+  border: 1px solid #C4E9E2; border-radius: var(--as-radius-box); background: var(--as-green-tint); }
+.as-buyinfo li { display: flex; align-items: flex-start; gap: 10px; font-size: 15px; line-height: 1.6; color: var(--as-black); }
+.as-buyinfo svg { flex: none; width: 22px; height: 22px; margin-top: 1px; fill: none; stroke: var(--as-green-ink);
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.as-buyinfo a { color: var(--as-black); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
