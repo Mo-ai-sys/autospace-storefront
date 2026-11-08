@@ -722,7 +722,11 @@
           "<li>" + ICON.box + "<span>" + ship + "</span></li>" +
           "<li>" + ICON.chat + "<span>" + T("عندك سؤال عن القطعة؟ ", "A question about this part? ") +
           '<a href="' + ask + '" target="_blank" rel="noopener">' + T("اطلب عبر واتساب", "Order on WhatsApp") + "</a></span></li>";
-        form.parentNode.insertBefore(box, form.nextSibling);
+        // directly under the add-to-cart row, above the share links
+        var cta = form.querySelector("button.btn-filled");
+        var row = cta && cta.parentElement && cta.parentElement.parentElement;
+        if (row && form.contains(row)) row.appendChild(box);
+        else form.parentNode.insertBefore(box, form.nextSibling);
       });
   }
   var SHIP_FROM = 21;                                            // Naqel Express up to 15 kg, the widest-reaching carrier
