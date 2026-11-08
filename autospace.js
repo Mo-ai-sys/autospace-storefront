@@ -711,15 +711,12 @@
         var bulky = bulkyIds.indexOf(id) >= 0;
         var ask = wa(T("السلام عليكم، عندي سؤال عن القطعة: ", "Hello, I have a question about this part: ") + title +
           T(". رقم الهيكل: ", ". VIN: ") + (store.get("vin", "") || ""));
-        var ship = bulky
-          ? T("قطعة كبيرة، لا يشملها الشحن المجاني. تكلفة شحنها حسب الوزن والمدينة.",
-              "Large part, not included in free shipping. Shipping depends on weight and city.")
-          : T("شحن مجاني للطلبات فوق 500 ر.س، وأقل من ذلك من " + SHIP_FROM + " ر.س حسب المدينة.",
-              "Free shipping on orders over 500 SAR, otherwise from " + SHIP_FROM + " SAR by city.");
+        // owner, 2026-11-08: only the free-shipping promise, no fee; parts it does not cover show no shipping line
+        var ship = bulky ? "" : T("شحن مجاني للطلبات فوق 500 ر.س", "Free shipping on orders over 500 SAR");
         var box = el("ul", { class: "as-buyinfo" });
         box.innerHTML =
           "<li>" + ICON.truck + "<span>" + T("يصل خلال 1 إلى 5 أيام عمل", "Arrives in 1 to 5 business days") + "</span></li>" +
-          "<li>" + ICON.box + "<span>" + ship + "</span></li>" +
+          (ship ? "<li>" + ICON.box + "<span>" + ship + "</span></li>" : "") +
           "<li>" + ICON.chat + "<span>" + T("عندك سؤال عن القطعة؟ ", "A question about this part? ") +
           '<a href="' + ask + '" target="_blank" rel="noopener">' + T("اطلب عبر واتساب", "Order on WhatsApp") + "</a></span></li>";
         // directly under the add-to-cart row, above the share links
@@ -729,7 +726,6 @@
         else form.parentNode.insertBefore(box, form.nextSibling);
       });
   }
-  var SHIP_FROM = 21;                                            // Naqel Express up to 15 kg, the widest-reaching carrier
 
   // ---------- speed: card images ----------
   // Cards are about 200 px wide but the theme asks for 600 px images; 400 px is 42% lighter and still
