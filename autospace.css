@@ -191,7 +191,8 @@ body:has(#mobile-drawer-dialog[open]) .as-chip-bar { display: none; }
 
 /* phones: two products per row in the theme's default grid view (it only offers one column or list) */
 @media (max-width: 767px) {
-  [data-grid-root][data-grid="one"] { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 12px; row-gap: 28px; }
+  /* Zid serves data-grid="four" then switches to "one": style both the same so the switch moves nothing (also in theme CSS) */
+  [data-grid-root][data-grid="four"], [data-grid-root][data-grid="one"] { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 12px; row-gap: 28px; }
   [data-grid-root][data-grid="one"] h3, [data-grid-root][data-grid="one"] h2 { font-size: 14px; line-height: 1.45; }
 }
 
@@ -293,7 +294,8 @@ a:has(> h4):hover, a:has(> * > h4):hover { border-color: var(--as-green) !import
 .as-fit-yes svg { width: 20px; height: 20px; }
 
 /* category heading on a make or model page: opens the car picker */
-.as-h1-car { display: inline-flex; align-items: center; gap: 6px; color: inherit; text-decoration: none; min-height: 44px; }
+/* 44px tap area without growing the 28px heading row (negative margin keeps layout still: CLS) */
+.as-h1-car { display: inline-flex; align-items: center; gap: 6px; color: inherit; text-decoration: none; min-height: 44px; margin-block: -8px; }
 .as-h1-car:hover { color: var(--as-green-ink); }
 .as-h1-chev { width: 20px; height: 20px; fill: none; stroke: var(--as-green-ink); stroke-width: 2.4;
   stroke-linecap: round; stroke-linejoin: round; }
